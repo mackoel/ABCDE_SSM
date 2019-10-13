@@ -1,5 +1,8 @@
 #include "pch.h"
-
+/*Only from distibution:
+...Ditrubution - return double*
+get.. - return double
+*/
 void initial_init_posterior(Posterior * posterior)
 {
 	int i = 0;
@@ -35,7 +38,22 @@ double run_model()
 {
 	return 0.0;
 }
-
+double prior_distribution(const int mode, const double param1 = 0, const double param2 = 0)
+{
+	if (mode == NORM)
+	{
+		return getNormalSample();
+	}
+	if(mode == NORM_WITH_PARAM)
+	{
+		return getNormalSampleWithParam(param1, param2);//double x = normalRandom()*sigma+Mi;
+	}
+	if (mode == EXPON)
+	{
+		return getLrand(param1);
+	}
+	//return ERROR_MODE;
+}
 double getNormalSample()
 {
 	double u = ((double)rand() / (RAND_MAX)) * 2 - 1;

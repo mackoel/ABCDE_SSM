@@ -25,3 +25,5 @@ double getNormalSampleWithParam(double mean, double var);
 double variancy(Posterior * posterior);
 
 double get_new_probabilities(Posterior *posterior, double prev_var);
+
+double prior_distribution(const int mode, const double param1 = 0, const double param2 = 0);
