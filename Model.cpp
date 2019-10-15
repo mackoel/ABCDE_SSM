@@ -15,7 +15,7 @@ void initial_init_posterior(Posterior * posterior)
 //	}
 }
 
-double distance(double * X, double * Y)
+double mean_distance(double * X, double * Y)
 {
 	int i = 0;
 	double mean_X = 0, mean_Y = 0;
@@ -29,6 +29,13 @@ double distance(double * X, double * Y)
 	return abs(mean_X - mean_Y);
 }
 
+double distance(double * X, double * Y, const int mode)
+{
+	if (mode == MEAN_ERROR)
+		return mean_distance(X, Y);
+}
+
+
 double sufficient_statistics(const int * X)
 {
 	return 0.0;
@@ -38,7 +45,7 @@ double run_model()
 {
 	return 0.0;
 }
-double prior_distribution(const int mode, const double param1 = 0, const double param2 = 0)
+double prior_distribution(const int mode, const double param1, const double param2)
 {
 	if (mode == NORM)
 	{
@@ -66,9 +73,11 @@ double getNormalSample()
 
 double getNormalSampleWithParam(double mean, double var)//is this gaussian kernel?
 {
-	std::default_random_engine generator;
-	std::normal_distribution<double> distribution(mean, var);
-	return distribution(generator);
+	//return var * getNormalSample() + mean;
+	std::random_device mch;
+	std::default_random_engine gen(mch());
+	std::normal_distribution<double> d(mean, var);
+	return d(gen);
 }
 
 double getLrand(double l)
@@ -83,7 +92,7 @@ double* ExponentionalDistribution(double param)//C++ FUNCTION TO CHECK - DELETE 
 	std::exponential_distribution<double> distribution(param);*/
 	int i = 0;
 	double *number = (double*)malloc(sizeof(double) * N);
-	srand((unsigned)time(NULL));
+//	srand((unsigned)time(NULL));
 	for (i; i < N; i++)
 	{
 		//number[i] = distribution(generator);
@@ -102,26 +111,38 @@ double* Model(const int mode, const double param)
 
 double variancy(Posterior *posterior)
 {
-	int i = 0, j = 0;
+	/*int i = 0, j = 0;
 	double s = 0;
-	for (i; i < N; i++)
+	for (i=0; i < N; i++)
 	{
 		double in_s = 0;
-		for (j; j < N; j++)
+		for (j = 0; j < N; j++)
 		{
-			in_s += posterior->thetha[j];
+			in_s += posterior->thetha[j]/(double)N;
 		}
-		in_s /= N;
 		s += posterior->thetha[i] - in_s;
 	}
-	return 2 * 1 / N * (s * s);
+	return (2.0 * (1.0 / (double)N)) * (s * s);*/
+	int i = 0, j = 0;
+	double s = 0.0;
+	for (i = 0; i < N; i++)
+	{
+		s += posterior->thetha[i];
+	}
+	s = s / (double)N;
+	double var = 0.0;
+	for (i = 0; i < N; i++)
+	{
+		var += (posterior->thetha[i] - s) * (posterior->thetha[i] - s);
+	}
+	return var;
 }
 
 double get_new_probabilities(Posterior * posterior, double prev_var)
 {
 	int j = 0;
 	double s = 0;
-	for (j; j < N; j++)
+	for (j = 0; j < N; j++)
 	{
 		s += posterior->w[j] * getNormalSampleWithParam(posterior->thetha[j], prev_var);
 	}

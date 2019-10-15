@@ -7,7 +7,10 @@ typedef struct
 
 void initial_init_posterior(Posterior * posterior);
 
-double distance(double * X, double * Y);
+double distance(double * X, double * Y, const int mode);
+
+double mean_distance(double * X, double * Y);
+
 
 double sufficient_statistics(const int * X);
 

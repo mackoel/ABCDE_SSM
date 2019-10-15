@@ -39,15 +39,34 @@ double uniform_random(double mm, double nn)
 	return (double)(mm + rand() / (RAND_MAX / (nn - mm + 1.0) + 1.0));
 }
 
+double max(double * value)
+{
+	double max = 0.0;
+	int i = 0;
+	for (i = 0; i < N; i++)
+	{
+		if (value[i] > max)
+		{
+			max = value[i];
+		}
+	}
+	return max;
+}
+double fRand(double fmin, double fmax)
+{
+	double f = (double)rand() / RAND_MAX;
+	return fmin + f * (fmax - fmin);
+}
 double get_prev_iter_with_probabilities(Posterior * posterior)
 {
 	int i = 0;
-	srand((unsigned)time(NULL));
 	for (i = 0; i < N; i++) {
-		double rndNumber = ((double)rand() / (double)RAND_MAX);
+		double rndNumber = fRand(0, max(posterior->w));
 		if (posterior->w[i] >= rndNumber) {
 			return posterior->thetha[i];
 		}
 	}
+	std::cout << "NO" << std::endl;
 	return posterior->thetha[0];
+
 }
