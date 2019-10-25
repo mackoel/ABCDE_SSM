@@ -6,13 +6,8 @@ get.. - return double
 void initial_init_posterior(Posterior * posterior)
 {
 	int i = 0;
-	posterior->thetha = (double*)malloc(sizeof(double) * N);//WHY I DO IT DYNAMIC???MAYBE CHANGE IT TO STATIC
+	posterior->thetha = (Thetha*)malloc(sizeof(Thetha) * N);
 	posterior->w = (double*)malloc(sizeof(double) * N);
-//	for (i; i < N; i++)
-//	{
-//		posterior->thetha[i] = getNormalSample();
-//		posterior->w[i] = 1 / N;
-//	}
 }
 
 double mean_distance(double * X, double * Y)
@@ -101,15 +96,60 @@ double* ExponentionalDistribution(double param)//C++ FUNCTION TO CHECK - DELETE 
 	return number;
 	
 }
-double* Model(const int mode, const double param)
+
+gchar ** Model_launch_exe(char * exe_file, char *ini_file)
 {
-	if (mode == EXPON)
+	gchar**result;
+	gchar**margv;
+	int argcp, i, j;
+	GString *command;
+	GError*gerror = NULL;
+	int flaggs, child_exit_status = 1;
+	gchar *standard_output;
+	gchar *standard_error;
+	gchar*conversion;
+	double max_value = G_MAXDOUBLE;
+	char* _command = new char[strlen(exe_file) + strlen(ini_file) + strlen("--default-name=") + 1];//если станет другое число больше символов - ошибка
+	strcpy(_command, exe_file);
+	strcat(_command, " --default-name=");
+	strcat(_command, ini_file);
+	
+	command = g_string_new(_command);
+	if (!g_shell_parse_argv(command->str, &argcp, &margv, &gerror)) {
+		if (gerror) {
+			g_error("g_shell_parse failed for %s\nwith %s", command->str, gerror->message);
+		}
+	}
+	g_string_free(command, TRUE);
+	flaggs = G_SPAWN_SEARCH_PATH;
+	if (!g_spawn_sync(NULL, margv, NULL, (GSpawnFlags)flaggs, NULL, NULL, &standard_output, &standard_error, &child_exit_status, &gerror)) {
+		if (gerror) {
+			g_error("g_spawn_sync failed for %s\nwith %s", margv[0], gerror->message);
+		}
+	}
+	g_strfreev(margv);
+	result = g_strsplit_set(standard_output, "\n", -1);
+	int result_length = g_strv_length(result);
+	int parsing_failed = 0;
+	g_strfreev(result);
+	g_free(standard_output);
+	g_free(standard_error);
+
+	return result;
+
+}
+double* Model(const int mode, char *exe_file, char *ini_file)
+{
+
+	if (mode == SSM)
 	{
-		return ExponentionalDistribution(param);
+		gchar** res =  Model_launch_exe(exe_file, ini_file);
+		return NULL;
+		//to double
 	}
 }
 
-double variancy(Posterior *posterior)
+double variancy(Posterior *posterior, const int mode)
 {
 	/*int i = 0, j = 0;
 	double s = 0;
@@ -127,24 +167,56 @@ double variancy(Posterior *posterior)
 	double s = 0.0;
 	for (i = 0; i < N; i++)
 	{
-		s += posterior->thetha[i];
+		if(mode == 0)
+		    s += posterior->thetha[i].n;
+		if(mode == 1)
+			s += posterior->thetha[i].l;
+		if (mode == 2)
+			s += posterior->thetha[i].lambda;
 	}
 	s = s / (double)N;
 	double var = 0.0;
 	for (i = 0; i < N; i++)
 	{
-		var += (posterior->thetha[i] - s) * (posterior->thetha[i] - s);
+		if (mode == 0)
+		    var += (posterior->thetha[i].n - s) * (posterior->thetha[i].n - s);
+		if (mode == 1)
+			var += (posterior->thetha[i].l - s) * (posterior->thetha[i].l - s);
+		if (mode == 2)
+			var += (posterior->thetha[i].lambda - s) * (posterior->thetha[i].lambda - s);
 	}
 	return var;
 }
 
-double get_new_probabilities(Posterior * posterior, double prev_var)
+double get_new_probabilities(Posterior * posterior, Thetha thetha)//»—ѕ–ј¬»“№
 {
 	int j = 0;
 	double s = 0;
+	double mean, var;
+	var = variancy(posterior, 0) + variancy(posterior, 1) + variancy(posterior, 2);
 	for (j = 0; j < N; j++)
 	{
-		s += posterior->w[j] * getNormalSampleWithParam(posterior->thetha[j], prev_var);
+		mean = (posterior->thetha[j].l + posterior->thetha[j].n + posterior->thetha[j].lambda) / 3;
+		s += posterior->w[j] * getNormalSampleWithParam(mean, var);
 	}
-	return getNormalSample() / s;////pi(thetha(i)/s))
+	mean = (thetha.l + thetha.n + thetha.lambda) / 3;
+	return getNormalSampleWithParam(mean, var) / s;////pi(thetha(i)/s))
+}
+
+Thetha generate_vector_param(const int mode, Thetha *prev_thetha)
+{
+	Thetha thetha;
+	if (prev_thetha == NULL)
+	{
+		thetha.n = prior_distribution(mode, MU_N, SIGMA);
+		thetha.l = prior_distribution(mode, MU_L, SIGMA);
+		thetha.lambda = prior_distribution(mode, MU_LAMBDA, SIGMA);
+	}
+	else
+	{
+		thetha.n = prior_distribution(mode, prev_thetha->n, 0);
+		thetha.l = prior_distribution(mode, prev_thetha->l, 1);
+		thetha.lambda = prior_distribution(mode, prev_thetha->lambda, 2);
+	}
+	return thetha;
 }

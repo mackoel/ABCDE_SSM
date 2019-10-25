@@ -57,7 +57,7 @@ double fRand(double fmin, double fmax)
 	double f = (double)rand() / RAND_MAX;
 	return fmin + f * (fmax - fmin);
 }
-double get_prev_iter_with_probabilities(Posterior * posterior)
+Thetha get_prev_iter_with_probabilities(Posterior * posterior)
 {
 	int i = 0;
 	for (i = 0; i < N; i++) {
@@ -66,7 +66,6 @@ double get_prev_iter_with_probabilities(Posterior * posterior)
 			return posterior->thetha[i];
 		}
 	}
-	std::cout << "NO" << std::endl;
 	return posterior->thetha[0];
 
 }

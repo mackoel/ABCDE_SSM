@@ -1,19 +1,19 @@
 #pragma once
-
+#include "pch.h"
 typedef struct
 {
-	int N;
-	int L;
-	double lambda;//take this lambda for exp distribution
-}config_deep;
+	int count_thread;
+	char * name_deep_ini_file;
+	char * name_exe_file;
+	double eps;
+	int t;
+}Config;
 
-typedef struct
-{
-	int N;//count iterations
-}config_abcde;
+double * read_real_data(const char * FILE_NAME = "real_data.txt");
+gchar* model_read_abc(gchar*filename, gsize*size, GError**err);
+int model_load_abc(Config *config, gchar*data, gsize size, GError**err);
+int read_config_file_abc(Config * config_file, gchar *filename, GError **err);
 
-void write_deep_config(const char * deep_file, double thetha);
-
-void write_to_file(double * data, const char * file_name);
-
-void read_from_file();
+void prepare_deep_file(Config config, Thetha thetha);
+int read_config_file_deep(Config * config_file, Thetha thetha, GError **err);
+int model_load_deep(Config *config, gchar*data, gsize size, Thetha thetha, GError**err);
