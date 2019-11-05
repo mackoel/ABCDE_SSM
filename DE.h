@@ -2,6 +2,6 @@
 
 double migration (Posterior * posterior);
 
-double crossover(Posterior * posterior);
+Thetha crossover(Posterior * posterior, int i);
 
-double mutation(Posterior * posterior);
+Thetha mutation(Posterior * posterior, int i);

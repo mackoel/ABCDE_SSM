@@ -25,8 +25,9 @@ double run_model();
 
 double getNormalSample();
 
-double* Model(const int mode, char *exe_file, char *ini_file);
+double Model(const int mode, char *exe_file, char *ini_file);
 double getLrand(double l);
+double getRandomSample(double param1, double param2);
 
 double* ExponentionalDistribution(double param);
 

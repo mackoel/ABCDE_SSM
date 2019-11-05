@@ -54,7 +54,21 @@ double prior_distribution(const int mode, const double param1, const double para
 	{
 		return getLrand(param1);
 	}
+	if (mode == RANDOM)
+	{
+		return getRandomSample(param1, param2);
+	}
 	//return ERROR_MODE;
+}
+double getRandomSample(double param1, double param2)
+{
+	std::random_device random_device; 
+	std::mt19937 generator(random_device()); 
+
+	std::uniform_int_distribution<> distribution(param1, param2); // Равномерное распределение [10, 20]
+
+	double x = distribution(generator); 
+	return x;
 }
 double getNormalSample()
 {
@@ -138,13 +152,13 @@ gchar ** Model_launch_exe(char * exe_file, char *ini_file)
 	return result;
 
 }
-double* Model(const int mode, char *exe_file, char *ini_file)
+double Model(const int mode, char *exe_file, char *ini_file)
 {
 
 	if (mode == SSM)
 	{
 		gchar** res =  Model_launch_exe(exe_file, ini_file);
-		return NULL;
+		return 0.0;
 		//to double
 	}
 }
