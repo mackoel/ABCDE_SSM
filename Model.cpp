@@ -123,32 +123,37 @@ gchar ** Model_launch_exe(char * exe_file, char *ini_file)
 	gchar *standard_error;
 	gchar*conversion;
 	double max_value = G_MAXDOUBLE;
-	char* _command = new char[strlen(exe_file) + strlen(ini_file) + strlen("--default-name=") + 1];//если станет другое число больше символов - ошибка
+	char* _command = new char[strlen(exe_file) + strlen(ini_file) + strlen("C:/project/SSM/ABCDE_SSM/ABCDE_SSM/") + strlen("--default-name=") +3];//если станет другое число больше символов - ошибка
 	strcpy(_command, exe_file);
 	strcat(_command, " --default-name=");
+	strcat(_command, "C:/project/SSM/ABCDE_SSM/ABCDE_SSM/");
 	strcat(_command, ini_file);
-	
+	std::cout << _command << std::endl;
 	command = g_string_new(_command);
 	if (!g_shell_parse_argv(command->str, &argcp, &margv, &gerror)) {
 		if (gerror) {
 			g_error("g_shell_parse failed for %s\nwith %s", command->str, gerror->message);
 		}
 	}
+	
 	g_string_free(command, TRUE);
 	flaggs = G_SPAWN_SEARCH_PATH;
+
 	if (!g_spawn_sync(NULL, margv, NULL, (GSpawnFlags)flaggs, NULL, NULL, &standard_output, &standard_error, &child_exit_status, &gerror)) {
 		if (gerror) {
 			g_error("g_spawn_sync failed for %s\nwith %s", margv[0], gerror->message);
 		}
 	}
+
 	g_strfreev(margv);
 	result = g_strsplit_set(standard_output, "\n", -1);
+	std::cout << result << std::endl;
 	int result_length = g_strv_length(result);
 	int parsing_failed = 0;
 	g_strfreev(result);
 	g_free(standard_output);
 	g_free(standard_error);
-
+	delete[] _command;
 	return result;
 
 }
@@ -220,16 +225,21 @@ double get_new_probabilities(Posterior * posterior, Thetha thetha)//»—ѕ–ј¬»“№
 Thetha generate_vector_param(const int mode, Thetha *prev_thetha)
 {
 	Thetha thetha;
+
 	if (prev_thetha == NULL)
 	{
-		thetha.n = prior_distribution(mode, MU_N, SIGMA);
-		thetha.l = prior_distribution(mode, MU_L, SIGMA);
+
+		thetha.n = (int)prior_distribution(mode, MU_N, SIGMA);
+		thetha.l = (int)prior_distribution(mode, MU_L, SIGMA);
 		thetha.lambda = prior_distribution(mode, MU_LAMBDA, SIGMA);
+		std::cout << "Take this param ";
+		std::cout << thetha.n << " ";
+		std::cout << thetha.l << std::endl;
 	}
 	else
 	{
-		thetha.n = prior_distribution(mode, prev_thetha->n, 0);
-		thetha.l = prior_distribution(mode, prev_thetha->l, 1);
+		thetha.n = (int)prior_distribution(mode, prev_thetha->n, 0);
+		thetha.l = (int)prior_distribution(mode, prev_thetha->l, 1);
 		thetha.lambda = prior_distribution(mode, prev_thetha->lambda, 2);
 	}
 	return thetha;

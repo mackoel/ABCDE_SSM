@@ -15,5 +15,7 @@ int model_load_abc(Config *config, gchar*data, gsize size, GError**err);
 int read_config_file_abc(Config * config_file, gchar *filename, GError **err);
 
 void prepare_deep_file(Config config, Thetha thetha);
-int read_config_file_deep(Config * config_file, Thetha thetha, GError **err);
-int model_load_deep(Config *config, gchar*data, gsize size, Thetha thetha, GError**err);
+int read_config_file_deep(Config config_file, Thetha thetha, GError **err);
+int model_load_deep(Config config, gchar*data, gsize size, Thetha thetha, GError**err);
+
+void create_curr_deep_ini_file(char * name_ini_file, char * default_deep_ini_file, int iter);

@@ -1,8 +1,8 @@
 #pragma once
 typedef struct
 {
-	double n;
-	double l;
+	int n;
+	int l;
 	double lambda;
 }Thetha;
 typedef struct
