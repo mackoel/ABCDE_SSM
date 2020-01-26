@@ -5,11 +5,12 @@ typedef struct
 	int count_thread;
 	char * name_deep_ini_file;
 	char * name_exe_file;
+	char * name_command_exe_file;
+	char * param_command_exe_file;
 	double eps;
 	int t;
 }Config;
 
-double * read_real_data(const char * FILE_NAME = "real_data.txt");
 gchar* model_read_abc(gchar*filename, gsize*size, GError**err);
 int model_load_abc(Config *config, gchar*data, gsize size, GError**err);
 int read_config_file_abc(Config * config_file, gchar *filename, GError **err);

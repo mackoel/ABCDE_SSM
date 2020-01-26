@@ -5,9 +5,11 @@ get.. - return double
 */
 void initial_init_posterior(Posterior * posterior)
 {
-	int i = 0;
-	posterior->thetha = (Thetha*)malloc(sizeof(Thetha) * N);
-	posterior->w = (double*)malloc(sizeof(double) * N);
+	//int i = 0;
+	//posterior->thetha = (Thetha*)malloc(sizeof(Thetha) * N);
+	posterior->thetha = new Thetha[N];
+	posterior->w = new double[N];
+	//posterior->w = (double*)malloc(sizeof(double) * N);
 }
 
 double mean_distance(double * X, double * Y)
@@ -122,20 +124,28 @@ gchar ** Model_launch_exe(char * exe_file, char *ini_file)
 	gchar *standard_output;
 	gchar *standard_error;
 	gchar*conversion;
-	double max_value = G_MAXDOUBLE;
-	char* _command = new char[strlen(exe_file) + strlen(ini_file) + strlen("C:/project/SSM/ABCDE_SSM/ABCDE_SSM/") + strlen("--default-name=") +3];//если станет другое число больше символов - ошибка
+	double max_value = G_MAXDOUBLE;//C:/project/SSM/ABCDE_SSM/ABCDE_SSM/
+	char* _command = new char[strlen(exe_file) + strlen(ini_file) + strlen("C:/project/SSM/ABCDE_SSM/ABCDE_SSM/") + strlen("--default-name=") +3];
 	strcpy(_command, exe_file);
 	strcat(_command, " --default-name=");
 	strcat(_command, "C:/project/SSM/ABCDE_SSM/ABCDE_SSM/");
+
 	strcat(_command, ini_file);
+	strcat(_command, "\0");
 	std::cout << _command << std::endl;
 	command = g_string_new(_command);
+	std::cout << command->str << std::endl;
+	delete[] _command;
+
+
+
 	if (!g_shell_parse_argv(command->str, &argcp, &margv, &gerror)) {
 		if (gerror) {
 			g_error("g_shell_parse failed for %s\nwith %s", command->str, gerror->message);
 		}
 	}
-	
+	std::cout << argcp << std::endl;
+
 	g_string_free(command, TRUE);
 	flaggs = G_SPAWN_SEARCH_PATH;
 
@@ -147,13 +157,11 @@ gchar ** Model_launch_exe(char * exe_file, char *ini_file)
 
 	g_strfreev(margv);
 	result = g_strsplit_set(standard_output, "\n", -1);
-	std::cout << result << std::endl;
 	int result_length = g_strv_length(result);
 	int parsing_failed = 0;
 	g_strfreev(result);
 	g_free(standard_output);
 	g_free(standard_error);
-	delete[] _command;
 	return result;
 
 }

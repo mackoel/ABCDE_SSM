@@ -1,34 +1,5 @@
 #include "pch.h"
 
-
-double * read_real_data(const char * FILE_NAME)
-{
-	FILE    *fFile = NULL;
-	char    szData[20];
-	unsigned int valCount = 0;
-	double  *dVal = NULL;
-	fpos_t filepos;
-
-	fFile = fopen(FILE_NAME, "r");
-	fgetpos(fFile, &filepos);
-	while (1) {
-		if (!fgets(szData, sizeof(szData), fFile))
-			break;
-		valCount++;
-	}
-
-	fsetpos(fFile, &filepos);
-
-	dVal = (double*)malloc(sizeof(double)*valCount);
-
-	for (unsigned int i = 0; i < valCount; ++i) {
-		fgets(szData, sizeof(szData), fFile);
-		dVal[i] = atof(szData);
-		//printf("%f", dVal[i]);
-	}
-	fclose(fFile);
-	return dVal;
-}
 gchar* model_read_abc(gchar*filename, gsize*size, GError**err)
 {
 	GFile*gfile;
@@ -83,6 +54,22 @@ int model_load_abc(Config *config, gchar*data, gsize size, GError**err)
 		g_debug("%s", gerror->message);
 		g_clear_error(&gerror);
 	}
+	if ((str = g_key_file_get_string(gkf, "data", "name_command_exe_file", &gerror)) != 0 || gerror == NULL) {
+		config->name_command_exe_file = str;
+		if (gerror != NULL) g_clear_error(&gerror);
+	}
+	else {
+		g_debug("%s", gerror->message);
+		g_clear_error(&gerror);
+	}
+	if ((str = g_key_file_get_string(gkf, "data", "param_command_exe_file", &gerror)) != 0 || gerror == NULL) {
+		config->param_command_exe_file = str;
+		if (gerror != NULL) g_clear_error(&gerror);
+	}
+	else {
+		g_debug("%s", gerror->message);
+		g_clear_error(&gerror);
+	}
 	if ((dval = g_key_file_get_integer(gkf, "data", "eps", &gerror)) != 0 || gerror == NULL) {
 		config->eps = ii;
 		if (gerror != NULL) g_clear_error(&gerror);
@@ -121,6 +108,7 @@ int read_config_file_abc(Config * config_file, gchar*filename, GError **err)
 		ret_val = 1;
 	}
 	g_free(data);
+	return ret_val;
 }
 
 gchar* model_read_deep(gchar*filename, gsize*size, GError**err)
@@ -157,8 +145,7 @@ int model_load_deep(Config config, gchar*data, gsize size, Thetha thetha,  GErro
 
 	sprintf(str_lambda, "%i", (int)thetha.lambda);
 
-	//printf("%s", str_lambda);
-	char* res_string_lambda = new char[strlen(str_lambda) + strlen("penalty;readpenalty;2;2;") + 2];
+	char* res_string_lambda = new char[strlen(str_lambda) + strlen("penalty;readpenalty;2;2;") + 2];//2 - ; and '\0'
 	strcpy(res_string_lambda, "penalty;readpenalty;2;2;");
 	strcat(res_string_lambda, str_lambda);
 	strcat(res_string_lambda, ";");
@@ -169,15 +156,20 @@ int model_load_deep(Config config, gchar*data, gsize size, Thetha thetha,  GErro
 
 	sprintf(str_n, "%i", thetha.n);
 	sprintf(str_l, "%i", thetha.l);
+	
 
-	//printf("%s", str_l);
-	//printf("%s", str_n);
-	char* res_string_n_l = new char[strlen(str_n)+strlen(str_l) + strlen("C:/project/SSM/SSM_improved/x64/Release/SSM_improved.exe -P 1 -N 5 -L 12 -Q -R 1 -l 3.453 -D 230 -s 0.75 -i 1 -d 60 -w 15 -f 15 -m 2 -r 0.5  -t 900 -q 200 -z 0.13 -x 79 -c 0.5 -b 0.36 -k 0.264 -E 0.13 -j 1 -a 1 -o 3 -U 6 C:/project/SSM/SSM_improved/SSM_improved/crops.ini.src C:/project/SSM/SSM_improved/SSM_improved/chickpea-ssm-snp.h5 C:/project/SSM/SSM_improved/SSM_improved/weather_ssm.h5") + 1];//если станет другое число больше символов - ошибка
-	strcpy(res_string_n_l, "C:/project/SSM/SSM_improved/x64/Release/SSM_improved.exe -P 1 -N ");
+	char* res_string_n_l = new char[strlen(str_n) + strlen(str_l) + strlen(config.name_command_exe_file) +  strlen(config.param_command_exe_file) + 20];
+
+	strcpy(res_string_n_l, "");
+	strcat(res_string_n_l, config.name_command_exe_file);
+	strcat(res_string_n_l, " -P 1 -N ");
 	strcat(res_string_n_l, str_n);
 	strcat(res_string_n_l, " -L ");
 	strcat(res_string_n_l, str_l);
-	strcat(res_string_n_l, " -Q -R 1 -l 3.453 -D 230 -s 0.75 -i 1 -d 60 -w 15 -f 15 -m 2 -r 0.5  -t 900 -q 200 -z 0.13 -x 79 -c 0.5 -b 0.36 -k 0.264 -E 0.13 -j 1 -a 1 -o 3 -U 6 C:/project/SSM/SSM_improved/SSM_improved/crops.ini.src C:/project/SSM/SSM_improved/SSM_improved/chickpea-ssm-snp.h5 C:/project/SSM/SSM_improved/SSM_improved/weather_ssm.h5");
+	strcat(res_string_n_l, " ");
+	strcat(res_string_n_l, config.param_command_exe_file);
+	strcat(res_string_n_l, "\0");
+
 	g_key_file_set_string(gkf, "default_model", "command", res_string_n_l);
 
 
@@ -332,6 +324,7 @@ int read_config_file_deep(Config config_file, Thetha thetha, GError **err)
 		ret_val = 1;
 	}
 	g_free(data);
+	return ret_val;
 }
 
 void prepare_deep_file(Config config, Thetha thetha)
@@ -342,7 +335,6 @@ void prepare_deep_file(Config config, Thetha thetha)
 
 void create_curr_deep_ini_file(char * name_ini_file, char * default_deep_ini_file, int iter)//default with new data
 {
-	//char * name_ini_file = (char*)malloc(strlen(default_deep_ini_file) + 4);//2 - for i and _(test_i.ini)//NOT ENOUGH
 	
 	int i = 0, j = 0;
 	char ch;
@@ -384,5 +376,4 @@ void create_curr_deep_ini_file(char * name_ini_file, char * default_deep_ini_fil
 
 	fclose(source);
 	fclose(target);
-//	return name_ini_file;
 }
