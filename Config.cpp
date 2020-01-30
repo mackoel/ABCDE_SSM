@@ -1,6 +1,6 @@
 #include "pch.h"
 
-gchar* model_read_abc(gchar*filename, gsize*size, GError**err)
+gchar* model_read_abc(char * filename, gsize*size, GError**err)
 {
 	GFile*gfile;
 	char *etag;
@@ -15,7 +15,7 @@ gchar* model_read_abc(gchar*filename, gsize*size, GError**err)
 	g_object_unref(gfile);
 	return data;
 }
-int model_load_abc(Config *config, gchar*data, gsize size, GError**err)
+int model_load_abc(Config &config, gchar*data, gsize size, GError**err)
 {
 	GKeyFile*gkf;
 	GError *gerror = NULL;
@@ -31,15 +31,7 @@ int model_load_abc(Config *config, gchar*data, gsize size, GError**err)
 		return 1;
 	}
 	if ((ii = g_key_file_get_integer(gkf, "data", "count_thread", &gerror)) != 0 || gerror == NULL) {
-		config->count_thread = ii;
-		if (gerror != NULL) g_clear_error(&gerror);
-	}
-	else {
-		g_debug("%s", gerror->message);
-		g_clear_error(&gerror);
-	}
-	if ((str = g_key_file_get_string(gkf, "data", "name_deep_ini_file", &gerror)) != 0 || gerror == NULL) {
-		config->name_deep_ini_file = str;
+		config.count_thread = ii;
 		if (gerror != NULL) g_clear_error(&gerror);
 	}
 	else {
@@ -47,7 +39,7 @@ int model_load_abc(Config *config, gchar*data, gsize size, GError**err)
 		g_clear_error(&gerror);
 	}
 	if ((str = g_key_file_get_string(gkf, "data", "name_exe_file", &gerror)) != 0 || gerror == NULL) {
-		config->name_exe_file = str;
+		config.name_exe_file = str;
 		if (gerror != NULL) g_clear_error(&gerror);
 	}
 	else {
@@ -55,7 +47,7 @@ int model_load_abc(Config *config, gchar*data, gsize size, GError**err)
 		g_clear_error(&gerror);
 	}
 	if ((str = g_key_file_get_string(gkf, "data", "name_command_exe_file", &gerror)) != 0 || gerror == NULL) {
-		config->name_command_exe_file = str;
+		config.name_command_exe_file = str;
 		if (gerror != NULL) g_clear_error(&gerror);
 	}
 	else {
@@ -63,23 +55,23 @@ int model_load_abc(Config *config, gchar*data, gsize size, GError**err)
 		g_clear_error(&gerror);
 	}
 	if ((str = g_key_file_get_string(gkf, "data", "param_command_exe_file", &gerror)) != 0 || gerror == NULL) {
-		config->param_command_exe_file = str;
+		config.param_command_exe_file = str;
 		if (gerror != NULL) g_clear_error(&gerror);
 	}
 	else {
 		g_debug("%s", gerror->message);
 		g_clear_error(&gerror);
 	}
-	if ((dval = g_key_file_get_integer(gkf, "data", "eps", &gerror)) != 0 || gerror == NULL) {
-		config->eps = ii;
+	if ((dval = g_key_file_get_double(gkf, "data", "eps", &gerror)) != 0 || gerror == NULL) {
+		config.eps = dval;
 		if (gerror != NULL) g_clear_error(&gerror);
 	}
 	else {
 		g_debug("%s", gerror->message);
 		g_clear_error(&gerror);
 	}
-	if ((ii = g_key_file_get_double(gkf, "data", "t", &gerror)) != 0 || gerror == NULL) {
-		config->t = ii;
+	if ((ii = g_key_file_get_integer(gkf, "data", "t", &gerror)) != 0 || gerror == NULL) {
+		config.t = ii;
 		if (gerror != NULL) g_clear_error(&gerror);
 	}
 	else {
@@ -91,18 +83,18 @@ int model_load_abc(Config *config, gchar*data, gsize size, GError**err)
 }
 
 
-int read_config_file_abc(Config * config_file, gchar*filename, GError **err)
+int read_config_file_abc(Config & config, GError **err)
 {
 	int ret_val = 0;
 	gchar*data = NULL;
 	gsize size;
 	GError *gerror = NULL;
 	g_return_val_if_fail(err == NULL || *err == NULL, 1);
-	if ((data = model_read_abc(filename, &size, &gerror)) == NULL) {
+	if ((data = model_read_abc(config.name_ini_file, &size, &gerror)) == NULL) {
 		g_propagate_error(err, gerror);
 		return 1;
 	}
-	ret_val = model_load_abc(config_file, data, size, &gerror);
+	ret_val = model_load_abc(config, data, size, &gerror);
 	if (ret_val == 1) {
 		g_propagate_error(err, gerror);
 		ret_val = 1;
@@ -126,7 +118,7 @@ gchar* model_read_deep(gchar*filename, gsize*size, GError**err)
 	g_object_unref(gfile);
 	return data;
 }
-int model_load_deep(Config config, gchar*data, gsize size, Thetha thetha,  GError**err)
+int model_load_deep(Config &config, gchar*data, gsize size, Thetha &thetha,  GError**err)
 {
 	GKeyFile*gkf;
 	GError *gerror = NULL;
@@ -142,6 +134,7 @@ int model_load_deep(Config config, gchar*data, gsize size, Thetha thetha,  GErro
 		return 1;
 	}
 	char str_lambda[1000];
+	//std::cout << "HERE_inside_2" << std::endl;
 
 	sprintf(str_lambda, "%i", (int)thetha.lambda);
 
@@ -156,9 +149,15 @@ int model_load_deep(Config config, gchar*data, gsize size, Thetha thetha,  GErro
 
 	sprintf(str_n, "%i", thetha.n);
 	sprintf(str_l, "%i", thetha.l);
-	
-
+	//std::cout << "HERE_inside_3" << std::endl;
+/*
+	std::cout << strlen(str_n) << std::endl;
+	std::cout << strlen(str_l) << std::endl;
+	std::cout << strlen(config.name_command_exe_file) << std::endl;
+	std::cout << strlen(config.param_command_exe_file) << std::endl;
+*/
 	char* res_string_n_l = new char[strlen(str_n) + strlen(str_l) + strlen(config.name_command_exe_file) +  strlen(config.param_command_exe_file) + 20];
+//	std::cout << "HERE_inside_3_1" << std::endl;
 
 	strcpy(res_string_n_l, "");
 	strcat(res_string_n_l, config.name_command_exe_file);
@@ -169,8 +168,10 @@ int model_load_deep(Config config, gchar*data, gsize size, Thetha thetha,  GErro
 	strcat(res_string_n_l, " ");
 	strcat(res_string_n_l, config.param_command_exe_file);
 	strcat(res_string_n_l, "\0");
+//	std::cout << "HERE_inside_3_2" << std::endl;
 
 	g_key_file_set_string(gkf, "default_model", "command", res_string_n_l);
+//	std::cout << "HERE_inside_4" << std::endl;
 
 
 	int count_sym = thetha.n * thetha.l + thetha.n + thetha.n * 18 + 5 + 2;// numbers have more 
@@ -203,6 +204,7 @@ int model_load_deep(Config config, gchar*data, gsize size, Thetha thetha,  GErro
 			strcat(default_model_str, "7;");
 	}
 	g_key_file_set_string(gkf, "default_model", "parms", default_model_str);
+	//std::cout << "HERE_inside_5" << std::endl;
 
 	//dparams
 	strcpy(default_model_str, "");
@@ -297,28 +299,33 @@ int model_load_deep(Config config, gchar*data, gsize size, Thetha thetha,  GErro
 	{
 		strcat(default_model_str, "0;");
 	}
+//	std::cout << "HERE_inside_6" << std::endl;
+
 	g_key_file_set_string(gkf, "default_model", "partype", default_model_str);
+	g_key_file_save_to_file(gkf, config.name_ini_file, &gerror);
+	g_key_file_free(gkf);
 	delete[] res_string_lambda;
 	delete[]  res_string_n_l;
 	delete[] default_model_str;
-	g_key_file_save_to_file(gkf, config.name_deep_ini_file, &gerror);
-	g_key_file_free(gkf);
+
 	return retval;
 }
 
 
-int read_config_file_deep(Config config_file, Thetha thetha, GError **err)
+int read_config_file_deep(Config &config, Thetha &thetha, GError **err)
 {
 	int ret_val = 0;
 	gchar*data = NULL;
 	gsize size;
 	GError *gerror = NULL;
 	g_return_val_if_fail(err == NULL || *err == NULL, 1);
-	if ((data = model_read_deep(config_file.name_deep_ini_file, &size, &gerror)) == NULL) {
+	if ((data = model_read_deep(config.curr_ini_file, &size, &gerror)) == NULL) {
 		g_propagate_error(err, gerror);
 		return 1;
 	}
-	ret_val = model_load_deep(config_file, data, size, thetha, &gerror);
+//	std::cout << "HERE_inside1" << std::endl;
+
+	ret_val = model_load_deep(config, data, size, thetha, &gerror);
 	if (ret_val == 1) {
 		g_propagate_error(err, gerror);
 		ret_val = 1;
@@ -327,40 +334,57 @@ int read_config_file_deep(Config config_file, Thetha thetha, GError **err)
 	return ret_val;
 }
 
-void prepare_deep_file(Config config, Thetha thetha)
+void prepare_deep_file(Config &config, Thetha &thetha)
 {
 	GError *gerror = NULL;
+	create_curr_deep_ini_file(config, &gerror);
 	read_config_file_deep(config, thetha, &gerror);
 }
 
-void create_curr_deep_ini_file(char * name_ini_file, char * default_deep_ini_file, int iter)//default with new data
+void print_param_and_error(const double *error, const Posterior &posterior)//переписать на c++
 {
-	
+	FILE * f_n = fopen("PARAM_N.txt", "w");
+	FILE * f_l = fopen("PARAM_L.txt", "w");
+	FILE * f_lambda = fopen("PARAM_LAMBDA.txt", "w");
+	FILE * f_error = fopen("ERROR.txt", "w");
+
+	for (int i = 0; i < N; i++)
+	{
+		fprintf(f_n, "%d\n", posterior.thetha[i].n);
+
+		fprintf(f_l, "%d\n", posterior.thetha[i].l);
+
+		fprintf(f_lambda, "%f\n", posterior.thetha[i].lambda);
+
+		fprintf(f_error, "%f\n", error[i]);
+
+	}
+}
+gchar * create_curr_deep_ini_file(Config &config, GError **err)//Переписать на c++
+{
+	gint fhandle;
+	const gchar *tmpl = NULL;
+	gchar *name_used = NULL;
+	GError *gerror = NULL;
+	GString*file_contents;
+	g_return_val_if_fail(err == NULL || *err == NULL, NULL);
+	if ((fhandle = g_file_open_tmp(tmpl, &name_used, &gerror)) == -1) {
+		g_propagate_error(err, gerror);
+		return NULL;
+	}
+	config.curr_ini_file = name_used;
+	//close(fhandle);
+	FILE * f = fopen(name_used, "w");
 	int i = 0, j = 0;
 	char ch;
 	FILE * source, *target;
-	for (i = 0; i < strlen(default_deep_ini_file) + 3; i++)
-	{	
-		if (i == 4)
-		{
-			name_ini_file[i] = iter + '0';
-			i++;
-		}
-		name_ini_file[i] = default_deep_ini_file[j];
-		j++;
-	}
-	name_ini_file[i + 1] = '\0';
-	std::cout << "begin" << std::endl;
-	std::cout << name_ini_file << std::endl;
-
-
-	source = fopen(default_deep_ini_file, "r");
+	source = fopen(config.name_ini_file, "r");
 	if (source == NULL)
 	{
 		printf("Press any key to exit...Not default file\n");
 		exit(EXIT_FAILURE);
 	}
-	target = fopen(name_ini_file, "w");
+	target = fopen(config.curr_ini_file, "w");
 
 	if (target == NULL)
 	{
@@ -372,8 +396,9 @@ void create_curr_deep_ini_file(char * name_ini_file, char * default_deep_ini_fil
 	while ((ch = fgetc(source)) != EOF)
 		fputc(ch, target);
 
-	printf("File copied successfully.\n");
+	//printf("File copied successfully.\n");
 
 	fclose(source);
 	fclose(target);
+	return NULL;
 }

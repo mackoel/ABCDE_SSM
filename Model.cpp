@@ -113,7 +113,7 @@ double* ExponentionalDistribution(double param)//C++ FUNCTION TO CHECK - DELETE 
 	
 }
 
-gchar ** Model_launch_exe(char * exe_file, char *ini_file)
+double Model_launch_exe(char * exe_file, char *ini_file)
 {
 	gchar**result;
 	gchar**margv;
@@ -127,24 +127,35 @@ gchar ** Model_launch_exe(char * exe_file, char *ini_file)
 	double max_value = G_MAXDOUBLE;//C:/project/SSM/ABCDE_SSM/ABCDE_SSM/
 	char* _command = new char[strlen(exe_file) + strlen(ini_file) + strlen("C:/project/SSM/ABCDE_SSM/ABCDE_SSM/") + strlen("--default-name=") +3];
 	strcpy(_command, exe_file);
+	strcat(_command, " -d");
+
 	strcat(_command, " --default-name=");
-	strcat(_command, "C:/project/SSM/ABCDE_SSM/ABCDE_SSM/");
+	//strcat(_command, "C:/project/SSM/ABCDE_SSM/x64/Release/");
+	strcat(_command, "'");
 
 	strcat(_command, ini_file);
+	strcat(_command, "'");
 	strcat(_command, "\0");
-	std::cout << _command << std::endl;
+	//std::cout << _command << std::endl;
 	command = g_string_new(_command);
-	std::cout << command->str << std::endl;
+	//std::cout << command->str << std::endl;
 	delete[] _command;
 
-
+	/*FILE * f = fopen(ini_file, "r");
+	int ch = fgetc(f);
+	while (ch != EOF)
+	{
+		putchar(ch);
+		ch = fgetc(f);
+	}
+	fclose(f);*/
 
 	if (!g_shell_parse_argv(command->str, &argcp, &margv, &gerror)) {
 		if (gerror) {
 			g_error("g_shell_parse failed for %s\nwith %s", command->str, gerror->message);
 		}
 	}
-	std::cout << argcp << std::endl;
+//	std::cout << argcp << std::endl;
 
 	g_string_free(command, TRUE);
 	flaggs = G_SPAWN_SEARCH_PATH;
@@ -159,10 +170,66 @@ gchar ** Model_launch_exe(char * exe_file, char *ini_file)
 	result = g_strsplit_set(standard_output, "\n", -1);
 	int result_length = g_strv_length(result);
 	int parsing_failed = 0;
+	int need_intprt_restart = 0;
+	char * cost = new char[1000];
+	char * score = new char[1000];
+	if (strlen(standard_output) > 0 && result != NULL) {
+		//	printf("result_length = %d;\n", result_length);
+			for (j = 0; j < result_length; j++) {
+		//		printf("result[%d] = %s;\n", j, result[j]);
+				if (j == 0)
+				{
+
+					for (int k = 0; k < strlen(result[j]); k++)
+					{
+						if (result[j][k] == 's' && result[j][k + 1] == 'c')//score
+						{
+							k += 6;
+							int t = 0;
+							//std::cout << result[j][k] << std::endl;
+
+							while (result[j][k] != 'f')
+							{
+								score[t] = result[j][k];
+								k++;
+								t++;
+							}
+						}
+						if (result[j][k] == 'c' && result[j][k + 1] == 'o')//cost
+						{
+							k += 5;
+							int t = 0;
+						//	std::cout << result[j][k] << std::endl;
+
+							while (k < strlen(result[j]))
+							{
+								cost[t] = result[j][k];
+								k++;
+								t++;
+							}
+							break;
+						}
+
+					}
+				}
+			}
+	}
+
+
+	std::cout << "Output is: " << std::endl;
+	std::cout << atof(cost) << std::endl;
+	std::cout << atof(score) << std::endl;
+//	std::cout << cost << std::endl;///странно выводит
+//	std::cout << score << std::endl;
+//	int result_length = g_strv_length(result);
+//	int parsing_failed = 0;
+	//g_strfreev(result);
+	//g_free(standard_output);
+//	
 	g_strfreev(result);
 	g_free(standard_output);
-	g_free(standard_error);
-	return result;
+	g_free(standard_error);	
+	return atof(cost);
 
 }
 double Model(const int mode, char *exe_file, char *ini_file)
@@ -170,9 +237,8 @@ double Model(const int mode, char *exe_file, char *ini_file)
 
 	if (mode == SSM)
 	{
-		gchar** res =  Model_launch_exe(exe_file, ini_file);
-		return 0.0;
-		//to double
+		double res =  Model_launch_exe(exe_file, ini_file);
+		return res;
 	}
 }
 
@@ -240,9 +306,11 @@ Thetha generate_vector_param(const int mode, Thetha *prev_thetha)
 		thetha.n = (int)prior_distribution(mode, MU_N, SIGMA);
 		thetha.l = (int)prior_distribution(mode, MU_L, SIGMA);
 		thetha.lambda = prior_distribution(mode, MU_LAMBDA, SIGMA);
-		std::cout << "Take this param ";
-		std::cout << thetha.n << " ";
-		std::cout << thetha.l << std::endl;
+	
+		//	std::cout << "Take this param ";
+		//	std::cout << thetha.n << " ";
+		//	std::cout << thetha.l << std::endl;
+		
 	}
 	else
 	{

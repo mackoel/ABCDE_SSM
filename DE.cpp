@@ -24,8 +24,8 @@ Thetha crossover(Posterior * posterior, int i)
 Thetha mutation(Posterior * posterior, int i)
 {
 	Thetha curr_thetha = posterior->thetha[i];
-	curr_thetha.l = curr_thetha.l + prior_distribution(NORM, MU_N, SIGMA);
-	curr_thetha.n = curr_thetha.n + prior_distribution(NORM, MU_L, SIGMA);
+	curr_thetha.l = curr_thetha.l + (int)prior_distribution(NORM, MU_N, SIGMA);
+	curr_thetha.n = curr_thetha.n + (int)prior_distribution(NORM, MU_L, SIGMA);
 	curr_thetha.lambda = curr_thetha.lambda + prior_distribution(NORM, MU_LAMBDA, SIGMA);
 	return curr_thetha;
 }
