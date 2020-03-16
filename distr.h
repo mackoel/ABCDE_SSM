@@ -34,7 +34,7 @@ class Distribution
 			double * w;
 		}Posterior;
 
-		double prior_distribution(const int mode, const double param1, const double param2)
+		double prior_distribution(TYPE_DISTR mode, const double param1 = 0.0, const double param2 = 0.0)
 		{
 			if (mode == NORM)
 			{
@@ -59,7 +59,7 @@ class Distribution
 			std::random_device random_device;
 			std::mt19937 generator(random_device());
 
-			std::uniform_int_distribution<> distribution(param1, param2); // Равномерное распределение [10, 20]
+			std::uniform_int_distribution<> distribution(param1, param2); // Р Р°РІРЅРѕРјРµСЂРЅРѕРµ СЂР°СЃРїСЂРµРґРµР»РµРЅРёРµ [10, 20]
 
 			double x = distribution(generator);
 			return x;
@@ -144,18 +144,18 @@ class Distribution
 			return var;
 		}
 
-		double get_new_probabilities(Posterior * posterior, Thetha thetha)
+		double get_new_probabilities(const Posterior & posterior, Thetha thetha)
 		{
 			int N = 0;
 
 			int j = 0;
 			double s = 0;
 			double mean, var;
-			var = variancy(posterior, 0) + variancy(posterior, 1) + variancy(posterior, 2);
+		//	var = variancy(posterior, 0) + variancy(posterior, 1) + variancy(posterior, 2);
 			for (j = 0; j < N; j++)
 			{
-				mean = (posterior->thetha[j].l + posterior->thetha[j].n + posterior->thetha[j].lambda) / 3;
-				s += posterior->w[j] * getNormalSampleWithParam(mean, var);
+				mean = (posterior.thetha[j].l + posterior.thetha[j].n + posterior.thetha[j].lambda) / 3;
+				s += posterior.w[j] * getNormalSampleWithParam(mean, var);
 			}
 			mean = (thetha.l + thetha.n + thetha.lambda) / 3;
 			return getNormalSampleWithParam(mean, var) / s;
