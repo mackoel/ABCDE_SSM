@@ -12,21 +12,22 @@ public:
 	
 	double run()
 	{
+		double res;
 		namespace bp = boost::process;
-		cout << "run" << endl;
 		boost::filesystem::path p = bp::search_path("deepmethod.exe");
-		cout << p << endl;
-		//C:\project\SSM\DEEP_2_2_5_1\DEEPMETHOD\bin
-		//int result = bp::system("deepmethod.exe --default_name=" + tmp_config_file);
-		int result = bp::system(p, "--default-name="+tmp_config_file);
-		cout << "end" << endl;
-		return 0.0;
-	//	namespace bp = boost::process; //we will assume this for all further examples
-	//	int result = bp::system("g++ main.cpp");
+		string output;
+		bp::system(p, "--default-name=" + tmp_config_file, bp::std_out > output);
+		parse_result(output);
+		return res;
 	}
-	double parse_result()
+	double parse_result(string output)
 	{
-
+		string score_str = "score:";
+		string fmean_str = "fmean:";
+		int ind = output.find(score_str);
+		cout << ind << endl;
+		string res = output.substr(ind + score_str.size(), output.find(fmean_str) - ind - score_str.size());
+		return stod(res);
 	}
 	string config_file;
 	string tmp_config_file;
@@ -42,7 +43,7 @@ public:
 		namespace pt = boost::property_tree;
 
 		pt::ptree propTree;
-		pt::read_ini(tmp_config_file, propTree);
+		pt::read_ini(tmp_config_file, propTree);//???
 
 		string str_lambda = "penalty;readpenalty;2;2;" + to_string(int(thetha.lambda)) + ";";
 		propTree.put("default_target.l1_pen", str_lambda);
@@ -126,9 +127,7 @@ public:
 			partype_str += "0;";
 		propTree.put("default_model.partype_str", partype_str);
 
-
-
-		write_ini("check.ini", propTree);
+		write_ini(tmp_config_file, propTree);
 
 	}
 
@@ -143,22 +142,22 @@ public:
 		source = fopen(config_file.c_str(), "r");
 		if (source == NULL)
 		{
-			exit(EXIT_FAILURE);
+			fclose(f);
 		}
 		target = fopen(tmp_config_file.c_str(), "w");
 
 		if (target == NULL)
 		{
 			fclose(source);
-			exit(EXIT_FAILURE);
 		}
 
 		while ((ch = fgetc(source)) != EOF)
 			fputc(ch, target);
 
-		cout << tmp_config_file << endl;
 		fclose(source);
 		fclose(target);
+		fclose(f);
+
 	}
 
 
