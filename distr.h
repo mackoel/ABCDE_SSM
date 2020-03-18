@@ -1,10 +1,5 @@
 #pragma once
 #include "pch.h"
-//DISTRIBUTION
-//#define NORM 0
-//#define EXPON 1
-//#define NORM_WITH_PARAM 2
-//#define RANDOM 8
 #define MEAN_ERROR 3
 #define LOFFSET log((double)RAND_MAX)
 #define MU_N 5
@@ -52,14 +47,13 @@ class Distribution
 			{
 				return getRandomSample(param1, param2);
 			}
-			//return ERROR_MODE;
 		}
 		double getRandomSample(double param1, double param2)
 		{
 			std::random_device random_device;
 			std::mt19937 generator(random_device());
 
-			std::uniform_int_distribution<> distribution(param1, param2); // Равномерное распределение [10, 20]
+			std::uniform_int_distribution<> distribution(param1, param2); 
 
 			double x = distribution(generator);
 			return x;
@@ -74,9 +68,8 @@ class Distribution
 			return u * c;
 		}
 
-		double getNormalSampleWithParam(double mean, double var)//is this gaussian kernel?
+		double getNormalSampleWithParam(double mean, double var)
 		{
-			//return var * getNormalSample() + mean;
 			std::random_device mch;
 			std::default_random_engine gen(mch());
 			std::normal_distribution<double> d(mean, var);
@@ -89,21 +82,7 @@ class Distribution
 			u = rand() / (RAND_MAX + 1.0);
 			return -log(1 - u) / l;
 		}
-		double* ExponentionalDistribution(double param)//C++ FUNCTION TO CHECK - DELETE AFTER CHECK
-		{
-			/*std::default_random_engine generator;
-			std::exponential_distribution<double> distribution(param);*/
-		/*	int i = 0;
-			double *number = (double*)malloc(sizeof(double) * N);
-			//	srand((unsigned)time(NULL));
-			for (i; i < N; i++)
-			{
-				//number[i] = distribution(generator);
-				number[i] = getLrand(param);
-			}
-			return number;
-			*/
-		}
+
 		double variancy(Posterior *posterior, const int mode)
 		{
 			/*int i = 0, j = 0;
