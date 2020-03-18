@@ -8,13 +8,16 @@ public:
 	Deep(const string &param)
 	{
 		config_file = param;
+		boost::property_tree::ptree pt;
+		boost::property_tree::ini_parser::read_ini(config_file, pt);
+		deep_exe = pt.get<std::string>("data.name_exe_file");
 	}
 	
 	double run()
 	{
 		double res;
 		namespace bp = boost::process;
-		boost::filesystem::path p = bp::search_path("deepmethod.exe");
+		boost::filesystem::path p = bp::search_path(deep_exe);
 		string output;
 		bp::system(p, "--default-name=" + tmp_config_file, bp::std_out > output);
 		parse_result(output);
@@ -31,6 +34,7 @@ public:
 	}
 	string config_file;
 	string tmp_config_file;
+	string deep_exe;
 	double error;
 	void act_with_config_file()
 	{
@@ -43,7 +47,7 @@ public:
 		namespace pt = boost::property_tree;
 
 		pt::ptree propTree;
-		pt::read_ini(tmp_config_file, propTree);//???
+		pt::read_ini(tmp_config_file, propTree);//?
 
 		string str_lambda = "penalty;readpenalty;2;2;" + to_string(int(thetha.lambda)) + ";";
 		propTree.put("default_target.l1_pen", str_lambda);
@@ -159,6 +163,4 @@ public:
 		fclose(f);
 
 	}
-
-
 };
