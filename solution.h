@@ -64,15 +64,15 @@ public:
 	}
 	void print_log(int iter)
 	{
-		ofstream logfile("log.txt");
-		logfile << "iteration = " << iter << endl;
+		ofstream logfile("log.txt", std::ios::app);//to end file
+		logfile << "iteration = " << iter << " ";
 		for (int i = 0; i < main_model.count_iter; i++)
 		{
-			logfile << "element number = " << i << endl;
-			logfile << main_model.posterior.thetha[i].n << endl;
-			logfile << main_model.posterior.thetha[i].l << endl;
-			logfile << main_model.posterior.thetha[i].lambda << endl;
-			logfile << main_model.posterior.w[i] << endl;
+			logfile << "element number = " << i << " ";
+			logfile << "n = " << main_model.posterior.thetha[i].n << " ";
+			logfile << "l = " << main_model.posterior.thetha[i].l << " ";
+			logfile << "lambda = " << main_model.posterior.thetha[i].lambda << " ";
+			logfile << "w = " << main_model.posterior.w[i] << " ";
 			logfile << endl;
 		}
 		logfile.close();
