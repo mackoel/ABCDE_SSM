@@ -3,6 +3,8 @@
 
 class Deep:public Model
 {
+	using boost::property_tree::ptree;
+	namespace pt = boost::property_tree;
 public:
 	Deep(){}
 	Deep(const string &param)
@@ -36,18 +38,15 @@ public:
 	string tmp_config_file;
 	string deep_exe;
 	double error;
+	pt::ptree propTree;
+
 	void act_with_config_file()
 	{
 		create_tmp_deep_ini_file();
 	}
 	void prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file)
 	{
-		using boost::property_tree::ptree;
-
-		namespace pt = boost::property_tree;
-
-		pt::ptree propTree;
-		pt::read_ini(tmp_config_file, propTree);//?
+	//	pt::ptree propTree;
 
 		string str_lambda = "penalty;readpenalty;2;2;" + to_string(int(thetha.lambda)) + ";";
 		propTree.put("default_target.l1_pen", str_lambda);
@@ -157,10 +156,12 @@ public:
 
 		while ((ch = fgetc(source)) != EOF)
 			fputc(ch, target);
+		pt::read_ini(tmp_config_file, propTree);
 
 		fclose(source);
 		fclose(target);
 		fclose(f);
+
 
 	}
 };
