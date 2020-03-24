@@ -129,12 +129,12 @@ class Distribution
 
 			int j = 0;
 			double s = 0;
-			double mean, var;
+			double mean, var = 0.0;
 		//	var = variancy(posterior, 0) + variancy(posterior, 1) + variancy(posterior, 2);
 			for (j = 0; j < N; j++)
 			{
 				mean = (posterior.thetha[j].l + posterior.thetha[j].n + posterior.thetha[j].lambda) / 3;
-				s += posterior.w[j] * getNormalSampleWithParam(mean, var);
+//				s += posterior.w[j] * getNormalSampleWithParam(mean, var);
 			}
 			mean = (thetha.l + thetha.n + thetha.lambda) / 3;
 			return getNormalSampleWithParam(mean, var) / s;
