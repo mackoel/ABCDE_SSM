@@ -73,8 +73,8 @@ public:
 			logfile << "l = " << main_model.posterior.thetha[i].l << " ";
 			logfile << "lambda = " << main_model.posterior.thetha[i].lambda << " ";
 			logfile << "w = " << main_model.posterior.w[i] << " ";
-			logfile << endl;
 		}
+		logfile << endl;
 		logfile.close();
 
 	}
