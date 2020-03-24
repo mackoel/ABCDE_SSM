@@ -1,18 +1,19 @@
 #pragma once
 #include "pch.h"
 
+
+
 class Deep:public Model
 {
-	using boost::property_tree::ptree;
-	namespace pt = boost::property_tree;
+	pt::ptree propTree;
+
 public:
 	Deep(){}
 	Deep(const string &param)
 	{
 		config_file = param;
-		boost::property_tree::ptree pt;
-		boost::property_tree::ini_parser::read_ini(config_file, pt);
-		deep_exe = pt.get<std::string>("data.name_exe_file");
+		boost::property_tree::ini_parser::read_ini(config_file, propTree);
+		deep_exe = propTree.get<std::string>("data.name_exe_file");
 	}
 	
 	double run()
@@ -22,7 +23,7 @@ public:
 		boost::filesystem::path p = bp::search_path(deep_exe);
 		string output;
 		bp::system(p, "--default-name=" + tmp_config_file, bp::std_out > output);
-		parse_result(output);
+		res = parse_result(output);
 		return res;
 	}
 	double parse_result(string output)
@@ -30,7 +31,6 @@ public:
 		string score_str = "score:";
 		string fmean_str = "fmean:";
 		int ind = output.find(score_str);
-		cout << ind << endl;
 		string res = output.substr(ind + score_str.size(), output.find(fmean_str) - ind - score_str.size());
 		return stod(res);
 	}
@@ -38,7 +38,6 @@ public:
 	string tmp_config_file;
 	string deep_exe;
 	double error;
-	pt::ptree propTree;
 
 	void act_with_config_file()
 	{
@@ -46,7 +45,6 @@ public:
 	}
 	void prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file)
 	{
-	//	pt::ptree propTree;
 
 		string str_lambda = "penalty;readpenalty;2;2;" + to_string(int(thetha.lambda)) + ";";
 		propTree.put("default_target.l1_pen", str_lambda);
@@ -134,34 +132,9 @@ public:
 
 	}
 
-	void create_tmp_deep_ini_file()//use boost with VS 2019
+	void create_tmp_deep_ini_file()
 	{
 		const char *name = tmpnam(NULL);  
-		FILE *f = fopen(name, "w"); 
 		tmp_config_file = name;
-		int i = 0, j = 0;
-		char ch;
-		FILE * source, *target;
-		source = fopen(config_file.c_str(), "r");
-		if (source == NULL)
-		{
-			fclose(f);
-		}
-		target = fopen(tmp_config_file.c_str(), "w");
-
-		if (target == NULL)
-		{
-			fclose(source);
-		}
-
-		while ((ch = fgetc(source)) != EOF)
-			fputc(ch, target);
-		pt::read_ini(tmp_config_file, propTree);
-
-		fclose(source);
-		fclose(target);
-		fclose(f);
-
-
 	}
 };
