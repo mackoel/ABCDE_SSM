@@ -1,9 +1,6 @@
 #pragma once
 #include "pch.h"
 
-//#define DEEP_FILE "deep_test.ini"
-//#define OUT_DEEP_FILE "deep_test.ini-deep-output"
-//#define N 3
 class Abcde: public Model
 {
 public:
@@ -45,9 +42,9 @@ public:
 		thetha_n = posterior.thetha[rand() % (count_iter + 1)];
 
 		curr_thetha = posterior.thetha[index];
-		curr_thetha.n = curr_thetha.n + si_1 * (thetha_m.n - thetha_n.n) + si_2 * (thetha_b.n - curr_thetha.n) + b;
-		curr_thetha.l = curr_thetha.l + si_1 * (thetha_m.l - thetha_n.l) + si_2 * (thetha_b.l - curr_thetha.l) + b;
-		curr_thetha.lambda = curr_thetha.lambda + si_1 * (thetha_m.lambda - thetha_n.lambda) + si_2 * (thetha_b.lambda - curr_thetha.lambda) + b;
+	//	curr_thetha.n = curr_thetha.n + si_1 * (thetha_m.n - thetha_n.n) + si_2 * (thetha_b.n - curr_thetha.n) + b;
+	//	curr_thetha.l = curr_thetha.l + si_1 * (thetha_m.l - thetha_n.l) + si_2 * (thetha_b.l - curr_thetha.l) + b;
+	//	curr_thetha.lambda = curr_thetha.lambda + si_1 * (thetha_m.lambda - thetha_n.lambda) + si_2 * (thetha_b.lambda - curr_thetha.lambda) + b;
 		return curr_thetha;
 	}
 	double get_statistics(Distribution::Thetha curr_thetha, double error, int i)
