@@ -1,75 +1,166 @@
 #pragma once
 #include "pch.h"
-
-class Abcde : public Model
+#define MEAN_ERROR 3
+#define LOFFSET log((double)RAND_MAX)
+#define MU_N 5
+#define MU_L 12
+#define MU_LAMBDA 5
+#define SIGMA 0.5
+#define SSM 7
+class Distribution
 {
-public:
-	Abcde() {}
-	Abcde(const string& param)
-	{
-		config_file = param;
-		init_posterior();
-		act_with_config_file();
-		error = new double[count_iter];
-	}
+    public:
+	    enum TYPE_DISTR
+        {
+	        NORM,
+	        EXPON,
+	        NORM_WITH_PARAM,
+	        RANDOM
+        };
+		typedef struct
+		{
+			int n;
+			int l;
+			double lambda;
+		}Thetha;
+		typedef struct
+		{
+			Thetha * thetha;
+			double * w;
+		}Posterior;
 
-	void act_with_config_file()
-	{
-		boost::property_tree::ptree pt;
-		boost::property_tree::ini_parser::read_ini(config_file, pt);
-		count_thread = stoi(pt.get<std::string>("data.count_thread"));
-		deep_exe = pt.get<std::string>("data.name_exe_file");
-		optimizing_model_exe = pt.get<std::string>("data.name_command_exe_file");
-		param_opt_model = pt.get<std::string>("data.param_command_exe_file");
-		eps = stod(pt.get<std::string>("data.eps"));
-		t = stoi(pt.get<std::string>("data.t"));
-		count_iter = stoi(pt.get<std::string>("data.count_iter"));
-	}
-	Distribution::Thetha mutation(int index)
-	{
-		Distribution::Thetha curr_thetha = posterior.thetha[index];
-		curr_thetha.l = curr_thetha.l + (int)generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_N, SIGMA);
-		curr_thetha.n = curr_thetha.n + (int)generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_L, SIGMA);
-		curr_thetha.lambda = curr_thetha.lambda + generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_LAMBDA, SIGMA);
-		return curr_thetha;
-	}
-	Distribution::Thetha crossover(int index)
-	{
-		double si_1 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), si_2 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), b = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.001, 0.001);
-		Distribution::Thetha thetha_b, thetha_m, thetha_n, curr_thetha;
-		thetha_b = generator.get_prev_iter_with_probabilities(posterior, count_iter);
-		thetha_m = posterior.thetha[rand() % (count_iter + 1)];
-		thetha_n = posterior.thetha[rand() % (count_iter + 1)];
+		double prior_distribution(TYPE_DISTR mode, const double param1 = 0.0, const double param2 = 0.0)
+		{
+			if (mode == NORM)
+			{
+				return getNormalSample();
+			}
+			if (mode == NORM_WITH_PARAM)
+			{
+				return getNormalSampleWithParam(param1, param2);//double x = normalRandom()*sigma+Mi;
+			}
+			if (mode == EXPON)
+			{
+				return getLrand(param1);
+			}
+			if (mode == RANDOM)
+			{
+				return getRandomSample(param1, param2);
+			}
+			return getRandomSample(param1, param2);
+		}
 
-		curr_thetha = posterior.thetha[index];
-		curr_thetha.n = curr_thetha.n + si_1 * (thetha_m.n - thetha_n.n) + si_2 * (thetha_b.n - curr_thetha.n) + b;
-		curr_thetha.l = curr_thetha.l + si_1 * (thetha_m.l - thetha_n.l) + si_2 * (thetha_b.l - curr_thetha.l) + b;
-		curr_thetha.lambda = curr_thetha.lambda + si_1 * (thetha_m.lambda - thetha_n.lambda) + si_2 * (thetha_b.lambda - curr_thetha.lambda) + b;
-		return curr_thetha;
-	}
-	double get_statistics(Distribution::Thetha curr_thetha, double error, int i)
-	{
+		double getRandomSample(double param1, double param2)
+		{
+			std::random_device random_device;
+			std::mt19937 generator(random_device());
 
-		double sigma_psi = generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
-		double psi = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, error, sigma_psi);
-		double alpha = ((generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.n, SIGMA) * generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.l, SIGMA) * generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.lambda, SIGMA)) * psi) / ((generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].n, SIGMA) * generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].l, SIGMA) * generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].lambda, SIGMA)) * psi);
-		return alpha;
-	}
-	string config_file;
-	string deep_exe;
-	string optimizing_model_exe;
-	string param_opt_model;
-	Distribution::Posterior posterior;
-	Distribution::Thetha curr_thetha;
-	Distribution generator;
-	double eps;
-	int t;
-	int count_iter;
-	int count_thread;
-	double* error;
-	void init_posterior()
-	{
-		posterior.thetha = new Distribution::Thetha[count_iter];
-		posterior.w = new double[count_iter];
-	}
+			std::uniform_int_distribution<> distribution(param1, param2); 
+
+			double x = distribution(generator);
+			return x;
+		}
+		double getNormalSample()
+		{
+			double u = ((double)rand() / (RAND_MAX)) * 2 - 1;
+			double v = ((double)rand() / (RAND_MAX)) * 2 - 1;
+			double r = u * u + v * v;
+			if (r == 0 || r > 1) return getNormalSample();
+			double c = sqrt(-2 * log(r) / r);
+			return u * c;
+		}
+
+		double getNormalSampleWithParam(double mean, double var)
+		{
+			std::random_device mch;
+			std::default_random_engine gen(mch());
+			std::normal_distribution<double> d(mean, var);
+			return d(gen);
+		}
+
+		double getLrand(double l)
+		{
+			double u;
+			u = rand() / (RAND_MAX + 1.0);
+			return -log(1 - u) / l;
+		}
+
+		double variancy(const Posterior &posterior, const int mode, const int size)
+		{
+			int i = 0, j = 0;
+			int N = size;
+			double s = 0.0;
+			for (i = 0; i < N; i++)
+			{
+				if (mode == 0)
+					s += posterior.thetha[i].n;
+				if (mode == 1)
+					s += posterior.thetha[i].l;
+				if (mode == 2)
+					s += posterior.thetha[i].lambda;
+			}
+			s = s / (double)N;
+			double var = 0.0;
+			for (i = 0; i < N; i++)
+			{
+				if (mode == 0)
+					var += (posterior.thetha[i].n - s) * (posterior.thetha[i].n - s);
+				if (mode == 1)
+					var += (posterior.thetha[i].l - s) * (posterior.thetha[i].l - s);
+				if (mode == 2)
+					var += (posterior.thetha[i].lambda - s) * (posterior.thetha[i].lambda - s);
+			}
+			return var;
+		}
+
+		double max_weight(double* w, const int size)
+		{
+			double max_w = -1.0;
+			for (int i = 0; i < size; i++)
+			{
+				if (w[i] > max_w)
+					max_w = w[i];
+			}
+			return max_w;
+		}
+
+		Thetha get_prev_iter_with_probabilities(const Posterior& posterior, const int size)
+		{
+			double prop;
+			for (int i = 0; i < size; i++)
+			{
+                prop = prior_distribution(RANDOM, 0.0, max_weight(posterior.w, size));
+				if (posterior.w[i] >=prop) {
+					return posterior.thetha[i];
+				}
+			}
+		}
+
+		double get_new_probabilities(const Posterior & posterior, Thetha thetha, const int size)
+		{
+			int N = size;
+
+			int j = 0;
+			double s = 0;
+			double mean, var = 0.0;
+			var = variancy(posterior, 0, size) * variancy(posterior, 1, size) * variancy(posterior, 2, size);
+			for (j = 0; j < N; j++)
+			{
+				mean = (posterior.thetha[j].l * posterior.thetha[j].n * posterior.thetha[j].lambda) / 3;
+				s += posterior.w[j] * getNormalSampleWithParam(mean, var);
+			}
+			mean = (thetha.l * thetha.n * thetha.lambda) / 3;
+			return getNormalSampleWithParam(mean, var) / s;
+		}
+
+		Thetha& generate_vector_param(TYPE_DISTR mode)
+		{
+			Thetha thetha;
+			thetha.n = (int)prior_distribution(mode, MU_N, SIGMA);
+			thetha.l = (int)prior_distribution(mode, MU_L, SIGMA);
+			thetha.lambda = prior_distribution(mode, MU_LAMBDA, SIGMA);
+			return thetha;
+		}
+
+
 };
