@@ -1,11 +1,11 @@
 #pragma once
 #include "pch.h"
 
-class Abcde: public Model
+class Abcde : public Model
 {
 public:
 	Abcde() {}
-	Abcde(const string &param)
+	Abcde(const string& param)
 	{
 		config_file = param;
 		init_posterior();
@@ -13,11 +13,11 @@ public:
 		error = new double[count_iter];
 	}
 
-	void act_with_config_file() 
+	void act_with_config_file()
 	{
 		boost::property_tree::ptree pt;
 		boost::property_tree::ini_parser::read_ini(config_file, pt);
-		count_thread =  stoi(pt.get<std::string>("data.count_thread"));
+		count_thread = stoi(pt.get<std::string>("data.count_thread"));
 		deep_exe = pt.get<std::string>("data.name_exe_file");
 		optimizing_model_exe = pt.get<std::string>("data.name_command_exe_file");
 		param_opt_model = pt.get<std::string>("data.param_command_exe_file");
@@ -37,14 +37,14 @@ public:
 	{
 		double si_1 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), si_2 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), b = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.001, 0.001);
 		Distribution::Thetha thetha_b, thetha_m, thetha_n, curr_thetha;
-	//	thetha_b = generator.get_prev_iter_with_probabilities(posterior);
+		thetha_b = generator.get_prev_iter_with_probabilities(posterior, count_iter);
 		thetha_m = posterior.thetha[rand() % (count_iter + 1)];
 		thetha_n = posterior.thetha[rand() % (count_iter + 1)];
 
 		curr_thetha = posterior.thetha[index];
-	//	curr_thetha.n = curr_thetha.n + si_1 * (thetha_m.n - thetha_n.n) + si_2 * (thetha_b.n - curr_thetha.n) + b;
-	//	curr_thetha.l = curr_thetha.l + si_1 * (thetha_m.l - thetha_n.l) + si_2 * (thetha_b.l - curr_thetha.l) + b;
-	//	curr_thetha.lambda = curr_thetha.lambda + si_1 * (thetha_m.lambda - thetha_n.lambda) + si_2 * (thetha_b.lambda - curr_thetha.lambda) + b;
+		curr_thetha.n = curr_thetha.n + si_1 * (thetha_m.n - thetha_n.n) + si_2 * (thetha_b.n - curr_thetha.n) + b;
+		curr_thetha.l = curr_thetha.l + si_1 * (thetha_m.l - thetha_n.l) + si_2 * (thetha_b.l - curr_thetha.l) + b;
+		curr_thetha.lambda = curr_thetha.lambda + si_1 * (thetha_m.lambda - thetha_n.lambda) + si_2 * (thetha_b.lambda - curr_thetha.lambda) + b;
 		return curr_thetha;
 	}
 	double get_statistics(Distribution::Thetha curr_thetha, double error, int i)
@@ -66,7 +66,7 @@ public:
 	int t;
 	int count_iter;
 	int count_thread;
-	double *error;
+	double* error;
 	void init_posterior()
 	{
 		posterior.thetha = new Distribution::Thetha[count_iter];
