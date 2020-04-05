@@ -55,7 +55,7 @@ public:
 				if (alpha > 1)
 				{
 					new_posterior.thetha[i] = curr_thetha;
-					new_posterior.w[i] = main_model.generator.get_new_probabilities(new_posterior, curr_thetha);//change-make generator private for abcde
+					new_posterior.w[i] = main_model.generator.get_new_probabilities(new_posterior, curr_thetha, main_model.count_iter);//change-make generator private for abcde
 				}
 			}
 			print_log(t);
@@ -73,8 +73,8 @@ public:
 			logfile << "l = " << main_model.posterior.thetha[i].l << " ";
 			logfile << "lambda = " << main_model.posterior.thetha[i].lambda << " ";
 			logfile << "w = " << main_model.posterior.w[i] << " ";
+			logfile << endl;
 		}
-		logfile << endl;
 		logfile.close();
 
 	}
