@@ -10,6 +10,5 @@ public:
 	string param_command_exe_file;
 	string curr_ini_file;
 	double eps;
-	int t;
-	
+	int t;	
 };
