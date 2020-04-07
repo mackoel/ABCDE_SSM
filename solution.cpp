@@ -7,7 +7,7 @@ Solution::Solution(const Abcde& _main_model, const Deep& _aux_model) {
 	error = 0.0;
 	alpha = 0.0;
 }
-void Solution::copy_posterior(Distribution::Posterior &posterior_to,Distribution::Posterior& posterior_from)
+inline void Solution::copy_posterior(Distribution::Posterior &posterior_to,Distribution::Posterior& posterior_from)
 {
 	Distribution::Thetha * tmp_thetha = posterior_to.thetha;
 	double* tmp_w = posterior_to.w;
@@ -33,13 +33,14 @@ void Solution::run()
 		} while (error < main_model.config.eps);
 		main_model.posterior.thetha[i] = main_model.curr_thetha;
 		main_model.posterior.w[i] = 1.0 / main_model.count_iter;
-
+		main_model.new_posterior.thetha[i] = main_model.curr_thetha;
+		main_model.new_posterior.w[i] = 1.0 / main_model.count_iter;
 	}
 	print_log(-1);
-	//current_values in Soultion, result_value in Abcde
 	for (int t = 0; t < main_model.t; t++)
 	{
-		copy_posterior(main_model.new_posterior, main_model.posterior);
+		if (t != 0)
+		    copy_posterior(main_model.new_posterior, main_model.posterior);
 		for (int i = 0; i < main_model.count_iter; i++)
 		{
 			if (rand() < 0.05)
