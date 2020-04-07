@@ -8,14 +8,50 @@ Deep::Deep(const string& param)
 	boost::property_tree::ini_parser::read_ini(config_file, propTree);
 	deep_exe = propTree.get<std::string>("data.name_exe_file");
 }
+string Deep::read_log_file(const string filename)
+{
+	ifstream fs;
+	string lastline;
 
+	fs.open(filename.c_str(), fstream::in);
+	if (fs.is_open())
+	{
+		fs.seekg(-1, std::ios_base::end);
+		if (fs.peek() == '\n')
+		{
+			fs.seekg(-1, std::ios_base::cur);
+			int i = fs.tellg();
+			for (i; i > 0; i--)
+			{
+				if (fs.peek() == '\n')
+				{
+					fs.get();
+					break;
+				}
+				fs.seekg(i, std::ios_base::beg);
+			}
+		}
+		getline(fs, lastline);
+		return lastline;
+	}
+	else
+	{
+		std::cout << "Could not find end line character" << std::endl;
+		return lastline;
+	}
+}
 double Deep::run()
 {
 	double res;
 	namespace bp = boost::process;
 	boost::filesystem::path p = bp::search_path(deep_exe);
+	bp::ipstream out;
 	string output;
-	bp::system(p, "--default-name=" + tmp_config_file, bp::std_out > output);
+
+	cout << "run deep " << endl;
+	bp::system(p.string() + " --default-name=" + tmp_config_file, bp::std_out > out);
+	cout << "end deep " << endl;
+	output = read_log_file(tmp_config_file + ".log");
 	res = parse_result(output);
 	return res;
 }
@@ -32,7 +68,7 @@ double Deep::parse_result(string output)
 void Deep::act_with_config_file()
 {
 	create_tmp_deep_ini_file();
-	cout << tmp_config_file << endl;
+	cout << "name tmp file is: " << tmp_config_file << endl;
 }
 
 void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file)
@@ -69,7 +105,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 		dparms_str += "200;";
 	for (int i = 0; i < thetha.n + thetha.n * 18; i++)
 		dparms_str += "5.5;";
-	vector<string> numbers_d = { "16.5;", "7.1;", "7.1", "7.1", "7.1", "7.1", "7.1" };
+	vector<string> numbers_d = { "16.5;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;" };
 	for (auto c : numbers_d)
 		dparms_str += c;
 	propTree.put("default_model.dparms", dparms_str);
@@ -79,7 +115,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 		lbounds_str += "0;";
 	for (int i = 0; i < thetha.n + thetha.n * 18; i++)
 		lbounds_str += "-10;";
-	vector<string> numbers_l = { "15;", "0;", "6", "1", "0", "1", "1" };
+	vector<string> numbers_l = { "15;", "0;", "6;", "1;", "0;", "1;", "1;" };
 	for (auto c : numbers_l)
 		lbounds_str += c;
 	propTree.put("default_model.lbound", lbounds_str);
@@ -90,7 +126,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 		hbounds_str += "1924;";
 	for (int i = 0; i < thetha.n + thetha.n * 18; i++)
 		hbounds_str += "10;";
-	vector<string> numbers_h = { "30;", "15;", "15", "15", "20", "100", "7.5" };
+	vector<string> numbers_h = { "30;", "15;", "15;", "15;", "20;", "100;", "7.5;" };
 	for (auto c : numbers_h)
 		hbounds_str += c;
 	propTree.put("default_model.hbound", hbounds_str);
@@ -104,12 +140,12 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	string limited_str;
 	for (int i = 0; i < count_param; i++)
 		limited_str += "1;";
-	propTree.put("default_model.limited_str", limited_str);
+	propTree.put("default_model.limited", limited_str);
 
 	string scale_str;
 	for (int i = 0; i < count_param; i++)
 		scale_str += "1;";
-	propTree.put("default_model.scale_str", scale_str);
+	propTree.put("default_model.scale", scale_str);
 
 	string partype_str;
 	for (int i = 0; i < thetha.n * thetha.l; i++)
@@ -118,7 +154,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 		partype_str += "0;";
 	for (int i = 0; i < 5 + 2; i++)
 		partype_str += "0;";
-	propTree.put("default_model.partype_str", partype_str);
+	propTree.put("default_model.partype", partype_str);
 
 	write_ini(tmp_config_file, propTree);
 }
