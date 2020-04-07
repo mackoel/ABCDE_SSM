@@ -11,7 +11,9 @@ public:
 	Deep();
 
 	Deep(const string& param);
-	
+
+	string read_log_file(const string filename);
+
 	double run();
 
 	double parse_result(string output);
