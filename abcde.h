@@ -16,6 +16,7 @@ public:
 	string optimizing_model_exe;
 	string param_opt_model;
 	Distribution::Posterior posterior;
+	Distribution::Posterior new_posterior;
 	Distribution::Thetha curr_thetha;
 	Distribution generator;
 	double eps;
