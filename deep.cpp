@@ -40,18 +40,25 @@ string Deep::read_log_file(const string filename)
 		return lastline;
 	}
 }
+
 double Deep::run()
 {
 	double res;
 	namespace bp = boost::process;
-	boost::filesystem::path p = bp::search_path(deep_exe);
-	bp::ipstream out;
+	bp::ipstream is; 
 	string output;
+	std::vector<std::string> data;
+	std::string line;
+	cout << "deep start" << endl;
+	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file, bp::std_out > is);
+	while (c.running() && std::getline(is, line) && !line.empty())
+	{
+		data.push_back(line);
+	}
+	c.wait();
+	cout << "deep end" << endl;
 
-	cout << "run deep " << endl;
-	bp::system(p.string() + " --default-name=" + tmp_config_file, bp::std_out > out);
-	cout << "end deep " << endl;
-	output = read_log_file(tmp_config_file + ".log");
+    output = data.back();
 	res = parse_result(output);
 	return res;
 }
