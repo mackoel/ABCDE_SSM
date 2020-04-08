@@ -5,8 +5,8 @@ Abcde::Abcde() {}
 Abcde::Abcde(const string& param)
 {
 	config_file = param;
-	init_posterior();
 	act_with_config_file();
+	init_posterior();
 	error = new double[count_iter];
 }
 
@@ -60,4 +60,6 @@ void Abcde::init_posterior()
 {
 	posterior.thetha = new Distribution::Thetha[count_iter];
 	posterior.w = new double[count_iter];
+	new_posterior.thetha = new Distribution::Thetha[count_iter];
+	new_posterior.w = new double[count_iter];
 }
