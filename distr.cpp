@@ -125,7 +125,7 @@ double Distribution::get_new_probabilities(const Distribution::Posterior& poster
 	return getNormalSampleWithParam(mean, var) / s;
 }
 
-Distribution::Thetha& Distribution::generate_vector_param(Distribution::TYPE_DISTR mode)
+Distribution::Thetha Distribution::generate_vector_param(Distribution::TYPE_DISTR mode)
 {
 	Thetha thetha;
 	thetha.n = (int)prior_distribution(mode, MU_N, SIGMA);
