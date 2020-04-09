@@ -8,6 +8,10 @@
 #define MU_LAMBDA 5
 #define SIGMA 0.5
 #define SSM 7
+//parametrs for mutation
+#define MU_N_MUT 0.75
+#define MU_L_MUT 2.25
+#define MU_LAMBDA_MUT 0.75
 
 class Distribution
 {
@@ -31,6 +35,7 @@ class Distribution
 		{
 			Thetha * thetha;
 			double * w;
+			double* error;
 		}Posterior;
 
 		double prior_distribution(TYPE_DISTR mode, const double param1 = 0.0, const double param2 = 0.0);
@@ -51,5 +56,5 @@ class Distribution
 
 		double get_new_probabilities(const Posterior& posterior, Thetha thetha, const int size);
 
-		Thetha generate_vector_param(TYPE_DISTR mode);
+		Thetha& generate_vector_param(TYPE_DISTR mode);
 };
