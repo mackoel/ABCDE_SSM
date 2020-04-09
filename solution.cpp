@@ -33,8 +33,11 @@ void Solution::run()
 		} while (error < main_model.config.eps);
 		main_model.posterior.thetha[i] = main_model.curr_thetha;
 		main_model.posterior.w[i] = 1.0 / main_model.count_iter;
+		main_model.posterior.error[i] = error;
 		main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 		main_model.new_posterior.w[i] = 1.0 / main_model.count_iter;
+		main_model.new_posterior.error[i] = error;
+
 	}
 	print_log(-1);
 	for (int t = 0; t < main_model.t; t++)
@@ -45,20 +48,32 @@ void Solution::run()
 		{
 			if (rand() < 0.05)
 			{
+				cout << "mutation: ";
 				main_model.curr_thetha = main_model.mutation(i);
 			}
 			else
 			{
+				cout << "crossover: ";
+
 				main_model.curr_thetha = main_model.crossover(i);
 			}
+			cout << main_model.curr_thetha.n << " ";
+			cout << main_model.curr_thetha.l << " ";
+			cout << main_model.curr_thetha.lambda << endl;
+
 			aux_model.act_with_config_file();
 			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model);
 			error = aux_model.run();
+			cout << "error = " << error << endl;
+
 			alpha = main_model.get_statistics(main_model.curr_thetha, error, i);
+			cout << "alpha = " << alpha << endl;
+
 			if (alpha > 1)
 			{
 				main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 				main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
+				main_model.new_posterior.error[i] = error;
 			}
 		}
 		print_log(t);
