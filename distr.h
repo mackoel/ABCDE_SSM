@@ -56,5 +56,5 @@ class Distribution
 
 		double get_new_probabilities(const Posterior& posterior, Thetha thetha, const int size);
 
-		Thetha& generate_vector_param(TYPE_DISTR mode);
+		Thetha generate_vector_param(TYPE_DISTR mode);
 };
