@@ -115,13 +115,13 @@ double Distribution::get_new_probabilities(const Distribution::Posterior& poster
 	int j = 0;
 	double s = 0;
 	double mean, var = 0.0;
-	var = variancy(posterior, 0, size) * variancy(posterior, 1, size) * variancy(posterior, 2, size);
+	var = variancy(posterior, 0, size) + variancy(posterior, 1, size) + variancy(posterior, 2, size);
 	for (j = 0; j < N; j++)
 	{
-		mean = (posterior.thetha[j].l * posterior.thetha[j].n * posterior.thetha[j].lambda) / 3;
+		mean = (posterior.thetha[j].l + posterior.thetha[j].n + posterior.thetha[j].lambda) / 3;
 		s += posterior.w[j] * getNormalSampleWithParam(mean, var);
 	}
-	mean = (thetha.l * thetha.n * thetha.lambda) / 3;
+	mean = (thetha.l + thetha.n + thetha.lambda) / 3;
 	return getNormalSampleWithParam(mean, var) / s;
 }
 
@@ -134,3 +134,27 @@ Distribution::Thetha Distribution::generate_vector_param(Distribution::TYPE_DIST
 	return thetha;
 }
 
+double Distribution::erf(double x)
+{
+	double y = 1.0 / (1.0 + 0.3275911 * x);
+	return 1 - (((((
+		+1.061405429 * y
+		- 1.453152027) * y
+		+ 1.421413741) * y
+		- 0.284496736) * y
+		+ 0.254829592) * y)
+		* exp(-x * x);
+}
+double Distribution::kernelNormalSampleWithParam(double x, double mean, double var)
+{
+	return 0.5 * (1 + erf((x - mean) / (var * sqrt(2.))));
+}
+
+double Distribution::kernel_function(Distribution::TYPE_DISTR mode, double x, const double param1, const double param2)
+{
+	if (mode == NORM_WITH_PARAM)
+	{
+		return kernelNormalSampleWithParam(x, param1, param2);
+	}
+	return kernelNormalSampleWithParam(x, param1, param2);
+}
