@@ -36,6 +36,7 @@ class Distribution
 			Thetha * thetha;
 			double * w;
 			double* error;
+			double delta;
 		}Posterior;
 
 		double prior_distribution(TYPE_DISTR mode, const double param1 = 0.0, const double param2 = 0.0);
@@ -57,4 +58,11 @@ class Distribution
 		double get_new_probabilities(const Posterior& posterior, Thetha thetha, const int size);
 
 		Thetha generate_vector_param(TYPE_DISTR mode);
+
+		double erf(double x);
+
+
+		double kernelNormalSampleWithParam(double x, double mean, double var);
+		
+		double kernel_function(TYPE_DISTR mode, double x, const double param1 = 0.0, const double param2 = 0.0);
 };
