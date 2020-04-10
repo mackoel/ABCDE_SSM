@@ -24,5 +24,6 @@ public:
 	int count_iter;
 	int count_thread;
 	double* error;
+	double delta;//for check
 
 };
