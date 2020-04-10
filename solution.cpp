@@ -68,12 +68,23 @@ void Solution::run()
 
 			alpha = main_model.get_statistics(main_model.curr_thetha, error, i);
 			cout << "alpha = " << alpha << endl;
-
+			//alpha = min(1.0, alpha);
 			if (alpha > 1)
 			{
 				main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 				main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
 				main_model.new_posterior.error[i] = error;
+				main_model.new_posterior.delta = main_model.delta;
+			}
+			else
+			{
+				if (rand() < alpha)
+				{
+					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
+					main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
+					main_model.new_posterior.error[i] = error;
+					main_model.new_posterior.delta = main_model.delta;
+				}
 			}
 		}
 		print_log(t);
@@ -83,7 +94,7 @@ void Solution::run()
 
 void Solution::print_log(int iter)
 {
-	ofstream logfile("log.txt", std::ios::app);//to end file
+	ofstream logfile("log.txt", std::ios::app);
 	logfile << "iteration = " << iter << " ";
 	for (int i = 0; i < main_model.count_iter; i++)
 	{
