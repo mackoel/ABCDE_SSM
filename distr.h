@@ -29,6 +29,7 @@ class Distribution
 			int n;
 			int l;
 			double lambda;
+			double delta;
 		}Thetha;
 
 		typedef struct
@@ -36,7 +37,7 @@ class Distribution
 			Thetha * thetha;
 			double * w;
 			double* error;
-			double delta;
+			double delta_one;
 		}Posterior;
 
 		double prior_distribution(TYPE_DISTR mode, const double param1 = 0.0, const double param2 = 0.0);
