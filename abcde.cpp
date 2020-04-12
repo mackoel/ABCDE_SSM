@@ -21,6 +21,7 @@ void  Abcde::act_with_config_file()
 	eps = stod(pt.get<std::string>("data.eps"));
 	t = stoi(pt.get<std::string>("data.t"));
 	count_iter = stoi(pt.get<std::string>("data.count_iter"));
+	start_iter = stoi(pt.get<std::string>("data.start_iter"));
 }
 
 Distribution::Thetha  Abcde::mutation(int index)
@@ -61,19 +62,20 @@ Distribution::Thetha Abcde::crossover(int index)
 	return curr_thetha;
 }
 
-double Abcde::get_statistics(Distribution::Thetha curr_thetha, double error, int i)
+double Abcde::get_statistics(Parametrs::MODE mode, Distribution::Thetha curr_thetha, double error, int i)
 {
-	/*posterior.delta = generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
-	double psi_curr = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, error, posterior.delta);
-	double psi_prev = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], posterior.delta);
-	double curr_alpha = ((generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.n, SIGMA) * generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.l, SIGMA) * generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.lambda, SIGMA)) * psi_curr);
-	double prev_alpha = ((generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].n, SIGMA) * generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].l, SIGMA) * generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].lambda, SIGMA)) * psi_prev);
-
-	double alpha = curr_alpha / prev_alpha;
-	return alpha;*/
-	delta = generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
-	double psi_curr = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, error, delta);
-	double psi_prev = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], posterior.delta);
+	double psi_curr, psi_prev;
+	if (mode == Parametrs::MODE::INIT)
+	{
+		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, error, 0.0, curr_thetha.delta);
+	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, posterior.thetha[i].delta);
+	}
+	else
+	{
+        psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, error, 0.0, posterior.delta_one);
+	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, posterior.delta_one);
+	}
+	
 	double curr_alpha = ((generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.n, MU_N, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.l, MU_L,  SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.lambda, MU_LAMBDA, SIGMA)) * psi_curr);
 	double prev_alpha = ((generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].n, MU_N, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].l, MU_L, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].lambda, MU_LAMBDA, SIGMA)) * psi_prev);
 
