@@ -2,10 +2,11 @@
 
 int main(int argc, char *argv[])
 {
-	string param(argv[1]);
-	Abcde abcde(param);
-	Deep deep(param);
-	Solution solution(abcde, deep);
+	Parametrs param;
+	param.process_program_options(argc, argv);
+	Abcde abcde(param.config_file);
+	Deep deep(param.config_file);
+	Solution solution(abcde, deep, param);
 	solution.run();
 	return 0;
 }
