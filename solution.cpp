@@ -1,11 +1,13 @@
 #include "pch.h"
 
 
-Solution::Solution(const Abcde& _main_model, const Deep& _aux_model) {
+Solution::Solution(const Abcde& _main_model, const Deep& _aux_model, const Parametrs& _param) {
 	main_model = _main_model;
 	aux_model = _aux_model;
+	param = _param;
 	error = 0.0;
 	alpha = 0.0;
+
 }
 inline void Solution::copy_posterior(Distribution::Posterior &posterior_to,Distribution::Posterior& posterior_from)
 {
@@ -18,6 +20,7 @@ inline void Solution::copy_posterior(Distribution::Posterior &posterior_to,Distr
 }
 void Solution::run()
 {
+	cout << "run" << endl;
 	for (int i = 0; i < main_model.count_iter; i++)
 	{
 		do {
@@ -37,9 +40,69 @@ void Solution::run()
 		main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 		main_model.new_posterior.w[i] = 1.0 / main_model.count_iter;
 		main_model.new_posterior.error[i] = error;
-
+		main_model.posterior.thetha[i].delta = main_model.new_posterior.thetha[i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
 	}
 	print_log(-1);
+	for (int t = 0; t < main_model.start_iter; t++)
+	{
+		for (int i = 0; i < main_model.count_iter; i++)
+		{
+			if (rand() < 0.05)
+			{
+				cout << "mutation: ";
+				main_model.curr_thetha = main_model.mutation(i);
+				main_model.curr_thetha.delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+
+			}
+			else
+			{
+				cout << "crossover: ";
+
+				main_model.curr_thetha = main_model.crossover(i);
+				main_model.curr_thetha.delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+
+			}
+			cout << main_model.curr_thetha.n << " ";
+			cout << main_model.curr_thetha.l << " ";
+			cout << main_model.curr_thetha.lambda << endl;
+
+			aux_model.act_with_config_file();
+			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model);
+			error = aux_model.run();
+
+			cout << "error = " << error << endl;
+			alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i);
+			cout << "alpha = " << alpha << endl;
+			if (alpha > 1)
+			{
+				main_model.new_posterior.thetha[i] = main_model.curr_thetha;
+				main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
+				main_model.new_posterior.error[i] = error;
+			}
+			else
+			{
+				if (rand() < alpha)
+				{
+					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
+					main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
+					main_model.new_posterior.error[i] = error;
+				}
+			}
+		}
+	}
+	if (param.mode_delta == Parametrs::DELTA_MODE::MEAN)
+	{
+		double s = 0.0;
+		for (int i = 0; i < main_model.count_iter; i++)
+		{
+			s += main_model.posterior.thetha[i].delta;
+		}
+		main_model.posterior.delta_one = s / main_model.count_iter;
+	}
+	else if (param.mode_delta == Parametrs::DELTA_MODE::MED)
+	{
+		//
+	}
 	for (int t = 0; t < main_model.t; t++)
 	{
 		if (t != 0)
@@ -66,15 +129,13 @@ void Solution::run()
 			error = aux_model.run();
 			cout << "error = " << error << endl;
 
-			alpha = main_model.get_statistics(main_model.curr_thetha, error, i);
+			alpha = main_model.get_statistics(Parametrs::MODE::AUX, main_model.curr_thetha, error, i);
 			cout << "alpha = " << alpha << endl;
-			//alpha = min(1.0, alpha);
 			if (alpha > 1)
 			{
 				main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 				main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
 				main_model.new_posterior.error[i] = error;
-				main_model.new_posterior.delta = main_model.delta;
 			}
 			else
 			{
@@ -83,7 +144,6 @@ void Solution::run()
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 					main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
 					main_model.new_posterior.error[i] = error;
-					main_model.new_posterior.delta = main_model.delta;
 				}
 			}
 		}
