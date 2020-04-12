@@ -7,9 +7,9 @@ private:
 	Abcde main_model;
 	Deep aux_model;
 	double error, alpha;
-
+	Parametrs param;
 public:
-	Solution(const Abcde& _main_model, const Deep& _aux_model);
+	Solution(const Abcde& _main_model, const Deep& _aux_model, const Parametrs& _param);
 
 	void run();
 
