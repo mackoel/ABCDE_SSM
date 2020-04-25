@@ -30,6 +30,7 @@ Distribution::Thetha  Abcde::mutation(int index)
 	curr_thetha.l = curr_thetha.l + (int)generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_N_MUT, SIGMA);
 	curr_thetha.n = curr_thetha.n + (int)generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_L_MUT, SIGMA);
 	curr_thetha.lambda = curr_thetha.lambda + generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_LAMBDA_MUT, SIGMA);
+	curr_thetha.delta = curr_thetha.delta + generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
 	return curr_thetha;
 }
 
@@ -59,6 +60,7 @@ Distribution::Thetha Abcde::crossover(int index)
 	curr_thetha.n = curr_thetha.n + si_1 * (thetha_m.n - thetha_n.n) + si_2 * (thetha_b.n - curr_thetha.n) + b;
 	curr_thetha.l = curr_thetha.l + si_1 * (thetha_m.l - thetha_n.l) + si_2 * (thetha_b.l - curr_thetha.l) + b;
 	curr_thetha.lambda = curr_thetha.lambda + si_1 * (thetha_m.lambda - thetha_n.lambda) + si_2 * (thetha_b.lambda - curr_thetha.lambda) + b;
+	curr_thetha.delta = curr_thetha.delta + si_1 * (thetha_m.delta - thetha_n.delta) + si_2 * (thetha_b.delta - curr_thetha.delta) + b;
 	return curr_thetha;
 }
 
