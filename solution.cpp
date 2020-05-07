@@ -47,7 +47,9 @@ void Solution::run()
 	{
 		for (int i = 0; i < main_model.count_iter; i++)
 		{
-			if (rand() < 0.05)
+			double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
+			cout << "choice var = " << choice << endl;
+			if (choice < 0.1)
 			{
 				cout << "mutation: ";
 				main_model.curr_thetha = main_model.mutation(i);
@@ -72,23 +74,21 @@ void Solution::run()
 
 			cout << "error = " << error << endl;
 			alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i);
-			cout << "alpha = " << alpha << endl;
-			if (alpha > 1)
+
+			cout << "alpha original = " << alpha << endl;
+			alpha = min(1.0, alpha);
+			cout << "alpha after = " << alpha << endl;
+			if (main_model.accept_alpha(alpha))
 			{
+				cout << "accept" << endl;
 				main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 				main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
 				main_model.new_posterior.error[i] = error;
 			}
 			else
-			{
-				if (rand() < alpha)
-				{
-					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
-					main_model.new_posterior.error[i] = error;
-				}
-			}
+				cout << "not accept" << endl;
 		}
+		copy_posterior(main_model.posterior, main_model.new_posterior);
 	}
 	if (param.mode_delta == Parametrs::DELTA_MODE::MEAN)
 	{
@@ -109,7 +109,9 @@ void Solution::run()
 		    copy_posterior(main_model.new_posterior, main_model.posterior);
 		for (int i = 0; i < main_model.count_iter; i++)
 		{
-			if (rand() < 0.05)
+			double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
+			cout << "choice var = " << choice << endl;
+			if (choice < 0.1)
 			{
 				cout << "mutation: ";
 				main_model.curr_thetha = main_model.mutation(i);
@@ -130,22 +132,18 @@ void Solution::run()
 			cout << "error = " << error << endl;
 
 			alpha = main_model.get_statistics(Parametrs::MODE::AUX, main_model.curr_thetha, error, i);
-			cout << "alpha = " << alpha << endl;
-			if (alpha > 1)
+			cout << "alpha original = " << alpha << endl;
+			alpha = min(1.0, alpha);
+			cout << "alpha after = " << alpha << endl;
+			if (main_model.accept_alpha(alpha))
 			{
+				cout << "accept" << endl;
 				main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 				main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
 				main_model.new_posterior.error[i] = error;
 			}
 			else
-			{
-				if (rand() < alpha)
-				{
-					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.w[i] = main_model.generator.get_new_probabilities(main_model.new_posterior, main_model.curr_thetha, main_model.count_iter);//change-make generator private for abcde
-					main_model.new_posterior.error[i] = error;
-				}
-			}
+				cout << "not accept" << endl;
 		}
 		print_log(t);
 		copy_posterior(main_model.posterior, main_model.new_posterior);
