@@ -27,7 +27,7 @@ double Distribution::getRandomSample(double param1, double param2)
 	std::random_device random_device;
 	std::mt19937 generator(random_device());
 
-	std::uniform_int_distribution<> distribution(param1, param2);
+	std::uniform_real_distribution<> distribution(param1, param2);
 
 	double x = distribution(generator);
 	return x;
