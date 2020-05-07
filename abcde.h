@@ -6,6 +6,7 @@ class Abcde : public Model
 public:
 	Abcde();
 	Abcde(const string& param);	
+	bool accept_alpha(double alpha);
 	void init_posterior();
 	void act_with_config_file();
 	Distribution::Thetha mutation(int index);
