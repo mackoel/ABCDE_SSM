@@ -85,6 +85,16 @@ double Abcde::get_statistics(Parametrs::MODE mode, Distribution::Thetha curr_the
 	return alpha;
 }
 
+bool Abcde::accept_alpha(double alpha)
+{
+	std::random_device rd;
+	std::uniform_real_distribution<> dist(0.0, 1.0);
+	std::mt19937 engine(rd());
+	double value = dist(engine);
+	if (value > 1.0 - alpha)
+		return true;
+	return false;
+}
 void Abcde::init_posterior()
 {
 	posterior.thetha = new Distribution::Thetha[count_iter];
