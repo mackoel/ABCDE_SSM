@@ -22,22 +22,24 @@ void  Abcde::act_with_config_file()
 	t = stoi(pt.get<std::string>("data.t"));
 	count_iter = stoi(pt.get<std::string>("data.count_iter"));
 	start_iter = stoi(pt.get<std::string>("data.start_iter"));
+	mode = stoi(pt.get<std::string>("data.mode"));
+	count_opt_param = stoi(pt.get<std::string>("data.count_opt_param"));
 }
 
-Distribution::Thetha  Abcde::mutation(int index)
+Distribution::Thetha  Abcde::mutation(int index)//
 {
-	Distribution::Thetha curr_thetha = posterior.thetha[index];
-	curr_thetha.l = curr_thetha.l + (int)generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_N_MUT, SIGMA);
-	curr_thetha.n = curr_thetha.n + (int)generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_L_MUT, SIGMA);
-	curr_thetha.lambda = curr_thetha.lambda + generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_LAMBDA_MUT, SIGMA);
-	curr_thetha.delta = curr_thetha.delta + generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
-	return curr_thetha;
+	Distribution::Thetha _curr_thetha = posterior.thetha[index];
+	_curr_thetha.l = _curr_thetha.l + (int)generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_N_MUT, SIGMA);
+	_curr_thetha.n = _curr_thetha.n + (int)generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_L_MUT, SIGMA);
+	_curr_thetha.lambda = _curr_thetha.lambda + generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_LAMBDA_MUT, SIGMA);
+	_curr_thetha.delta = _curr_thetha.delta + generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+	return _curr_thetha;
 }
 
-Distribution::Thetha Abcde::crossover(int index)
+Distribution::Thetha Abcde::crossover(int index)//
 {
 	double si_1 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), si_2 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), b = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.001, 0.001);
-	Distribution::Thetha thetha_b, thetha_m, thetha_n, curr_thetha;
+	Distribution::Thetha thetha_b, thetha_m, thetha_n, _curr_thetha;
 	int m_index, n_index;
 	m_index = rand() % (count_iter - 1);
 	n_index = rand() % (count_iter - 1);
@@ -56,29 +58,29 @@ Distribution::Thetha Abcde::crossover(int index)
 	thetha_m = posterior.thetha[rand() % (count_iter - 1)];
 	thetha_n = posterior.thetha[rand() % (count_iter - 1)];
 
-	curr_thetha = posterior.thetha[index];
-	curr_thetha.n = curr_thetha.n + si_1 * (thetha_m.n - thetha_n.n) + si_2 * (thetha_b.n - curr_thetha.n) + b;
-	curr_thetha.l = curr_thetha.l + si_1 * (thetha_m.l - thetha_n.l) + si_2 * (thetha_b.l - curr_thetha.l) + b;
-	curr_thetha.lambda = curr_thetha.lambda + si_1 * (thetha_m.lambda - thetha_n.lambda) + si_2 * (thetha_b.lambda - curr_thetha.lambda) + b;
-	curr_thetha.delta = curr_thetha.delta + si_1 * (thetha_m.delta - thetha_n.delta) + si_2 * (thetha_b.delta - curr_thetha.delta) + b;
-	return curr_thetha;
+	_curr_thetha = posterior.thetha[index];
+	_curr_thetha.n = (int)((double)_curr_thetha.n + si_1 * ((double)thetha_m.n - (double)thetha_n.n) + si_2 * ((double)thetha_b.n - (double)_curr_thetha.n) + b);
+	_curr_thetha.l = (int)((double)_curr_thetha.l + si_1 * ((double)thetha_m.l - (double)thetha_n.l) + si_2 * ((double)thetha_b.l - (double)_curr_thetha.l) + b);
+	_curr_thetha.lambda = _curr_thetha.lambda + si_1 * (thetha_m.lambda - thetha_n.lambda) + si_2 * (thetha_b.lambda - _curr_thetha.lambda) + b;
+	_curr_thetha.delta = _curr_thetha.delta + si_1 * (thetha_m.delta - thetha_n.delta) + si_2 * (thetha_b.delta - _curr_thetha.delta) + b;
+	return _curr_thetha;
 }
 
-double Abcde::get_statistics(Parametrs::MODE mode, Distribution::Thetha curr_thetha, double error, int i)
+double Abcde::get_statistics(Parametrs::MODE mode, Distribution::Thetha _curr_thetha, double _error, int i)//
 {
 	double psi_curr, psi_prev;
 	if (mode == Parametrs::MODE::INIT)
 	{
-		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, error, 0.0, curr_thetha.delta);
+		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, _curr_thetha.delta);
 	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, posterior.thetha[i].delta);
 	}
 	else
 	{
-        psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, error, 0.0, posterior.delta_one);
+        psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, posterior.delta_one);
 	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, posterior.delta_one);
 	}
 	
-	double curr_alpha = ((generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.n, MU_N, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.l, MU_L,  SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.lambda, MU_LAMBDA, SIGMA)) * psi_curr);
+	double curr_alpha = ((generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _curr_thetha.n, MU_N, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _curr_thetha.l, MU_L,  SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _curr_thetha.lambda, MU_LAMBDA, SIGMA)) * psi_curr);
 	double prev_alpha = ((generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].n, MU_N, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].l, MU_L, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].lambda, MU_LAMBDA, SIGMA)) * psi_prev);
 
 	double alpha = curr_alpha / prev_alpha;
@@ -95,6 +97,7 @@ bool Abcde::accept_alpha(double alpha)
 		return true;
 	return false;
 }
+
 void Abcde::init_posterior()
 {
 	posterior.thetha = new Distribution::Thetha[count_iter];
