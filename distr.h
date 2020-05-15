@@ -29,6 +29,7 @@ class Distribution
 			int n;
 			int l;
 			double lambda;
+			vector<boost::any> param;
 			double delta;
 		}Thetha;
 
