@@ -12,8 +12,6 @@ public:
 
 	Deep(const string& param);
 
-	string read_log_file(const string filename);
-
 	double run();
 
 	double parse_result(string output);
@@ -28,4 +26,8 @@ public:
 	string tmp_config_file;
 	string deep_exe;
 	double error;
+	int index_score;
+	vector<int> num_string_when_add_param;// = 46; 46; 32
+	vector<int> index_opt_param_in_command_line;// = 5; 7; 5
+	vector<int> index_opt_param_in_vector_param;
 };
