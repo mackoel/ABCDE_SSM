@@ -26,4 +26,7 @@ public:
 	int start_iter;
 	int count_thread;
 	double* error;
+	int mode;//0 - mean, 1 - med
+	int count_opt_param;
+
 };
