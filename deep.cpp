@@ -7,39 +7,23 @@ Deep::Deep(const string& param)
 	config_file = param;
 	boost::property_tree::ini_parser::read_ini(config_file, propTree);
 	deep_exe = propTree.get<std::string>("data.name_exe_file");
-}
-string Deep::read_log_file(const string filename)
-{
-	ifstream fs;
-	string lastline;
+	index_score = stoi(propTree.get<std::string>("data.index_score"));
+	vector<string> str_param, str_index;
+	boost::split(str_param, propTree.get<std::string>("data.num_string_when_add_param"), boost::is_any_of(";"));
+	for (int i = 0; i < str_param.size(); i++)
+	{
+		num_string_when_add_param.push_back(stoi(str_param[i]));
+	}
+	boost::split(str_index, propTree.get<std::string>("data.index_opt_param_in_command_line"), boost::is_any_of(";"));
+	for (int i = 0; i < str_index.size(); i++)
+	{
+		index_opt_param_in_command_line.push_back(stoi(str_index[i]));
+		index_opt_param_in_vector_param.push_back(i);
+	}
 
-	fs.open(filename.c_str(), fstream::in);
-	if (fs.is_open())
-	{
-		fs.seekg(-1, std::ios_base::end);
-		if (fs.peek() == '\n')
-		{
-			fs.seekg(-1, std::ios_base::cur);
-			int i = fs.tellg();
-			for (i; i > 0; i--)
-			{
-				if (fs.peek() == '\n')
-				{
-					fs.get();
-					break;
-				}
-				fs.seekg(i, std::ios_base::beg);
-			}
-		}
-		getline(fs, lastline);
-		return lastline;
-	}
-	else
-	{
-		std::cout << "Could not find end line character" << std::endl;
-		return lastline;
-	}
+	
 }
+
 
 double Deep::run()
 {
@@ -50,6 +34,7 @@ double Deep::run()
 	std::vector<std::string> data;
 	std::string line;
 	cout << "deep start" << endl;
+	cout << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file << endl;
 	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file, bp::std_out > is);
 	while (c.running() && std::getline(is, line) && !line.empty())
 	{
@@ -59,17 +44,27 @@ double Deep::run()
 	cout << "deep end" << endl;
 
     output = data.back();
+
 	res = parse_result(output);
 	return res;
 }
 
 double Deep::parse_result(string output)
 {
-	string score_str = "score:";
-	string fmean_str = "fmean:";
-	int ind = output.find(score_str);
-	string res = output.substr(ind + score_str.size(), output.find(fmean_str) - ind - score_str.size());
-	return stod(res);
+	const char* pattern = ":[-+]?[0-9]*\.?[0-9]+";
+	boost::regex re(pattern);
+	int i = 1;
+	boost::sregex_iterator it(output.begin(), output.end(), re);
+	boost::sregex_iterator end;
+
+	for (; it != end; ++it)
+	{
+		if(i == index_score)
+		{
+			return stod(it->str().erase(0, 1));
+		}
+		i++;
+	}
 }
 
 void Deep::act_with_config_file()
@@ -77,9 +72,35 @@ void Deep::act_with_config_file()
 	create_tmp_deep_ini_file();
 	cout << "name tmp file is: " << tmp_config_file << endl;
 }
-
-void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file)
+bool if_param_change_ini(int i)
 {
+	if (i == 5 || i == 7)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool if_param_not_change_ini(int i)
+{
+	if (i != 5 && i != 7)
+	{
+		return true;
+	}
+	return false;
+}
+void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file)/////надо соотнести важные инедксы(5 и 7) с их позициями в векторе параметров
+{
+	if (boost::algorithm::any_of(index_opt_param_in_command_line, if_param_change_ini) == true)
+	{
+		cout << "change" << endl;
+
+	}
+	if (boost::algorithm::any_of(index_opt_param_in_command_line, if_param_not_change_ini) == true)
+	{
+		cout << "and not change" << endl;
+
+	}
 
 	string str_lambda = "penalty;readpenalty;2;2;" + to_string(int(thetha.lambda)) + ";";
 	propTree.put("default_target.l1_pen", str_lambda);
