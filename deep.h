@@ -27,7 +27,6 @@ public:
 	string deep_exe;
 	double error;
 	int index_score;
-	vector<int> num_string_when_add_param;// = 46; 46; 32
-	vector<int> index_opt_param_in_command_line;// = 5; 7; 5
-	vector<int> index_opt_param_in_vector_param;
+	vector<string> keys;// = 46; 46; 32
+	vector<int> index_in_keys;// = 5; 7; 5
 };
