@@ -11,7 +11,7 @@ public:
 	void act_with_config_file();
 	Distribution::Thetha mutation(int index);
 	Distribution::Thetha crossover(int index);
-	double get_statistics(Parametrs::MODE mode, Distribution::Thetha curr_thetha, double error, int i);
+	double get_statistics(Parametrs::MODE _mode, Distribution::Thetha curr_thetha, double error, int i);
 	string config_file;
 	string deep_exe;
 	string optimizing_model_exe;
@@ -28,5 +28,6 @@ public:
 	double* error;
 	int mode;//0 - mean, 1 - med
 	int count_opt_param;
+	vector<double> mean, std;
 
 };
