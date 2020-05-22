@@ -57,9 +57,9 @@ double Distribution::getLrand(double l)
 	return -log(1 - u) / l;
 }
 
-double Distribution::variancy(const Distribution::Posterior& posterior, const int mode, const int size)
+double Distribution::variancy(const Distribution::Posterior& posterior, const int mode, const int size)//
 {
-	int i = 0, j = 0;
+	int i = 0;
 	int N = size;
 	double s = 0.0;
 	for (i = 0; i < N; i++)
@@ -96,7 +96,7 @@ double Distribution::max_weight(double* w, const int size)
 	return max_w;
 }
 
-Distribution::Thetha Distribution::get_prev_iter_with_probabilities(const Distribution::Posterior& posterior, const int size)
+Distribution::Thetha Distribution::get_prev_iter_with_weight(const Distribution::Posterior& posterior, const int size)
 {
 	double prop;
 	for (int i = 0; i < size; i++)
@@ -106,11 +106,30 @@ Distribution::Thetha Distribution::get_prev_iter_with_probabilities(const Distri
 			return posterior.thetha[i];
 		}
 	}
+	return posterior.thetha[0];
 }
 
-double Distribution::get_new_probabilities(const Distribution::Posterior& posterior, Distribution::Thetha thetha, const int size)
+double Distribution::get_new_weight(Distribution::Thetha& prev_thetha, Distribution::Thetha& curr_thetha, const int count_opt_param, vector<double>& mean, vector<double>& std)
 {
-	int N = size;
+	double curr_kernel_func = 1, prev_kernel_func = 1;
+	for (int j = 0; j < count_opt_param; j++)
+	{
+		curr_kernel_func *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], mean[j], std[j]);
+		prev_kernel_func *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, prev_thetha.param[j], mean[j], std[j]);
+	}
+	return curr_kernel_func / prev_kernel_func;
+/*	double prior = 1, sum = 0;
+	for (int i = 0; i < count_opt_param; i++)
+	{
+		prior *= prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, thetha.param[i], SIGMA);
+	}
+	for (int i = 0; i < size_posterior; i++)
+	{
+	    sum += posterior.w[i] * kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM,)
+	}*/
+
+
+	/*int N = size;
 
 	int j = 0;
 	double s = 0;
@@ -122,15 +141,19 @@ double Distribution::get_new_probabilities(const Distribution::Posterior& poster
 		s += posterior.w[j] * getNormalSampleWithParam(mean, var);
 	}
 	mean = (thetha.l + thetha.n + thetha.lambda) / 3;
-	return getNormalSampleWithParam(mean, var) / s;
+	return getNormalSampleWithParam(mean, var) / s;*/
 }
 
-Distribution::Thetha Distribution::generate_vector_param(Distribution::TYPE_DISTR mode)
+Distribution::Thetha Distribution::generate_vector_param(Distribution::TYPE_DISTR mode, int count_opt_param, vector<double>& mean, vector<double>& std)//
 {
 	Thetha thetha;
-	thetha.n = (int)prior_distribution(mode, MU_N, SIGMA);
-	thetha.l = (int)prior_distribution(mode, MU_L, SIGMA);
-	thetha.lambda = prior_distribution(mode, MU_LAMBDA, SIGMA);
+	for (int i = 0; i < count_opt_param; i++)
+	{
+    	thetha.param.push_back(prior_distribution(mode, mean[i], std[i]));
+	}
+//	thetha.n = (int)prior_distribution(mode, MU_N, SIGMA);
+//	thetha.l = (int)prior_distribution(mode, MU_L, SIGMA);
+//	thetha.lambda = prior_distribution(mode, MU_LAMBDA, SIGMA);
 	return thetha;
 }
 
