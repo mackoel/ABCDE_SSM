@@ -18,7 +18,7 @@ public:
 
 	void act_with_config_file();
 
-	void prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file);
+	void prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file, vector<int>& dtype);
 
 	void create_tmp_deep_ini_file();
 
