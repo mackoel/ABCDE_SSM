@@ -78,7 +78,7 @@ void Deep::act_with_config_file()
 	out << "name tmp file is: " << tmp_config_file << endl;
 	out.close();
 }
-void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file)/////надо соотнести важные инедксы(5 и 7) с их позициями в векторе параметров
+void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file, vector<int>& dtype)
 {
 	vector<string> delimeters = {" ", ";", "," };
 	string str;
@@ -99,6 +99,9 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 
 		}
 		boost::split(split_str, str, boost::is_any_of(delimeter));
+		if (dtype[index] == 0)
+			thetha.param[index] = (int)thetha.param[index];
+
 		split_str[index_in_keys[index]] = to_string(thetha.param[index]);
 		
 		index += 1;
