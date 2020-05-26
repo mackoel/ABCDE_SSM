@@ -10,8 +10,11 @@ public:
 	void init_posterior();
 	void act_with_config_file();
 	Distribution::Thetha mutation(int index);
+	Distribution::Thetha bounds(Distribution::Thetha _curr_thetha);
+
 	Distribution::Thetha crossover(int index);
-	double get_statistics(Parametrs::MODE _mode, Distribution::Thetha curr_thetha, double error, int i);
+	void normalize_weights();
+	double get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double error, int i);
 	string config_file;
 	string deep_exe;
 	string optimizing_model_exe;
@@ -29,5 +32,7 @@ public:
 	int mode;//0 - mean, 1 - med
 	int count_opt_param;
 	vector<double> mean, std;
+	vector<int> dtype;
+	vector<double> lbound, hbound;
 
 };
