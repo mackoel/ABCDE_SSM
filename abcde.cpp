@@ -10,6 +10,18 @@ Abcde::Abcde(const string& param)
 	error = new double[count_iter];
 }
 
+void Abcde::normalize_weights()
+{
+	double sum = 0.0;
+	for (int i = 0; i < count_iter; i++)
+	{
+		sum += new_posterior.w[i];
+	}
+	for (int i = 0; i < count_iter; i++)
+	{
+		new_posterior.w[i] = new_posterior.w[i] / sum;
+	}
+}
 void  Abcde::act_with_config_file()
 {
 	boost::property_tree::ptree pt;
@@ -24,7 +36,7 @@ void  Abcde::act_with_config_file()
 	start_iter = stoi(pt.get<std::string>("data.start_iter"));
 	mode = stoi(pt.get<std::string>("data.mode"));
 	count_opt_param = stoi(pt.get<std::string>("data.count_opt_param"));
-	vector<string> str_mean, str_std;
+	vector<string> str_mean, str_std, str_hbound, str_lbound, str_dtype;
 	boost::split(str_mean, pt.get<std::string>("data.mean"), boost::is_any_of(";"));
 	for (int i = 0; i < str_mean.size(); i++)
 	{
@@ -35,10 +47,24 @@ void  Abcde::act_with_config_file()
 	{
 		std.push_back(stod(str_std[i]));
 	}
-
+	boost::split(str_hbound, pt.get<std::string>("data.hbound"), boost::is_any_of(";"));
+	for (int i = 0; i < str_hbound.size(); i++)
+	{
+		hbound.push_back(stod(str_hbound[i]));
+	}
+	boost::split(str_lbound, pt.get<std::string>("data.lbound"), boost::is_any_of(";"));
+	for (int i = 0; i < str_hbound.size(); i++)
+	{
+		lbound.push_back(stod(str_lbound[i]));
+	}
+	boost::split(str_dtype, pt.get<std::string>("data.dtype"), boost::is_any_of(";"));
+	for (int i = 0; i < str_std.size(); i++)
+	{
+		dtype.push_back(stoi(str_dtype[i]));
+	}
 }
 
-Distribution::Thetha  Abcde::mutation(int index)
+Distribution::Thetha Abcde::mutation(int index)
 {
 	/*Distribution::Thetha _curr_thetha = posterior.thetha[index];
 	_curr_thetha.l = _curr_thetha.l + (int)generator.prior_distribution(Distribution::TYPE_DISTR::NORM, MU_N_MUT, SIGMA);
@@ -52,9 +78,22 @@ Distribution::Thetha  Abcde::mutation(int index)
 		_curr_thetha.param[i] = _curr_thetha.param[i] + generator.prior_distribution(Distribution::TYPE_DISTR::NORM, mean[count_opt_param-1], std[count_opt_param - 1]);// another mean for 
 	}
 	_curr_thetha.delta = _curr_thetha.delta + generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
-	return _curr_thetha;
+	return bounds(_curr_thetha);
 }
-
+Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
+{
+	Distribution::Thetha thetha;
+	double alpha, beta;
+	double q;
+	for (int i = 0; i < count_opt_param; i++)
+	{
+		alpha = (hbound[i] + lbound[i]) / 2.0;
+		beta = (hbound[i] - lbound[i]) / 2.0;
+		q = alpha + beta * sin(_curr_thetha.param[i]);
+		thetha.param.push_back(q);
+	}
+	return thetha;
+}
 Distribution::Thetha Abcde::crossover(int index)
 {
 	ofstream out("log_crossover_index.txt", std::ios::app);
@@ -114,7 +153,7 @@ Distribution::Thetha Abcde::crossover(int index)
 		_curr_thetha.param[i] = (int)((double)_curr_thetha.param[i] + si_1 * ((double)thetha_m.param[i] - (double)thetha_n.param[i]) + si_2 * ((double)thetha_b.param[i] - (double)_curr_thetha.param[i]) + b);
 	}
 	_curr_thetha.delta = _curr_thetha.delta + si_1 * (thetha_m.delta - thetha_n.delta) + si_2 * (thetha_b.delta - _curr_thetha.delta) + b;
-	return _curr_thetha;
+	return bounds(_curr_thetha);
 }
 
 double Abcde::get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double _error, int i)
