@@ -7,7 +7,6 @@ Solution::Solution(const Abcde& _main_model, const Deep& _aux_model, const Param
 	param = _param;
 	error = 0.0;
 	alpha = 0.0;
-
 }
 inline void Solution::copy_posterior(Distribution::Posterior &posterior_to,Distribution::Posterior& posterior_from)
 {
@@ -25,9 +24,9 @@ void Solution::run()//
 	for (int i = 0; i < main_model.count_iter; i++)
 	{
 		do {
-			main_model.curr_thetha = main_model.generator.generate_vector_param(Distribution::NORM_WITH_PARAM, main_model.count_opt_param, main_model.mean, main_model.std);
+			main_model.curr_thetha = main_model.bounds(main_model.generator.generate_vector_param(Distribution::NORM_WITH_PARAM, main_model.count_opt_param, main_model.mean, main_model.std));
 			aux_model.act_with_config_file();
-			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model);
+			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
 			error = aux_model.run();
 			cout << "error = " << error << endl;
 		} while (error < main_model.config.eps);
@@ -38,6 +37,7 @@ void Solution::run()//
 		main_model.new_posterior.w[i] = 1.0 / main_model.count_iter;
 		main_model.new_posterior.error[i] = error;
 		main_model.posterior.thetha[i].delta = main_model.new_posterior.thetha[i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+
 	}
 	print_log(-1);
 	for (int t = 0; t < main_model.start_iter; t++)
@@ -66,7 +66,7 @@ void Solution::run()//
 		//	cout << main_model.curr_thetha.lambda << endl;
 
 			aux_model.act_with_config_file();
-			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model);
+			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
 			error = aux_model.run();
 
 			cout << "error = " << error << endl;
@@ -81,6 +81,7 @@ void Solution::run()//
 				main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 				main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior.thetha[i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
 				main_model.new_posterior.error[i] = error;
+				main_model.normalize_weights();
 			}
 			else
 				cout << "not accept" << endl;
@@ -129,7 +130,7 @@ void Solution::run()//
 		//	cout << main_model.curr_thetha.lambda << endl;
 
 			aux_model.act_with_config_file();
-			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model);
+			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
 			error = aux_model.run();
 			cout << "error = " << error << endl;
 
@@ -143,6 +144,8 @@ void Solution::run()//
 				main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 				main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior.thetha[i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
 				main_model.new_posterior.error[i] = error;
+				main_model.normalize_weights();
+
 			}
 			else
 				cout << "not accept" << endl;
