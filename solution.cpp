@@ -25,6 +25,10 @@ void Solution::run()//
 	{
 		do {
 			main_model.curr_thetha = main_model.bounds(main_model.generator.generate_vector_param(Distribution::NORM_WITH_PARAM, main_model.count_opt_param, main_model.mean, main_model.std));
+			for (int i = 0; i < main_model.count_opt_param; i++)
+			{
+				cout << main_model.curr_thetha.param[i] << endl;
+			}
 			aux_model.act_with_config_file();
 			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
 			error = aux_model.run();
@@ -61,9 +65,10 @@ void Solution::run()//
 				main_model.curr_thetha.delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
 
 			}
-		//	cout << main_model.curr_thetha.n << " ";
-		//	cout << main_model.curr_thetha.l << " ";
-		//	cout << main_model.curr_thetha.lambda << endl;
+			for (int i = 0; i < main_model.count_opt_param; i++)
+			{
+				cout << main_model.curr_thetha.param[i] << endl;
+			}
 
 			aux_model.act_with_config_file();
 			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
@@ -124,6 +129,10 @@ void Solution::run()//
 				cout << "crossover: ";
 
 				main_model.curr_thetha = main_model.crossover(i);
+			}
+			for (int i = 0; i < main_model.count_opt_param; i++)
+			{
+				cout << main_model.curr_thetha.param[i] << endl;
 			}
 			//cout << main_model.curr_thetha.n << " ";
 		//	cout << main_model.curr_thetha.l << " ";
