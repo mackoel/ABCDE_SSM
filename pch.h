@@ -15,6 +15,10 @@ using namespace std;
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/process.hpp>
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
+#include<boost/regex.hpp>
+#include<boost/algorithm/cxx11/any_of.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 using boost::property_tree::ptree;
 namespace pt = boost::property_tree;
