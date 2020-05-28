@@ -51,14 +51,17 @@ void  Abcde::act_with_config_file()
 	for (int i = 0; i < str_hbound.size(); i++)
 	{
 		hbound.push_back(stod(str_hbound[i]));
+		cout << hbound[i] << endl;
+
 	}
 	boost::split(str_lbound, pt.get<std::string>("data.lbound"), boost::is_any_of(";"));
-	for (int i = 0; i < str_hbound.size(); i++)
+	for (int i = 0; i < str_lbound.size(); i++)
 	{
 		lbound.push_back(stod(str_lbound[i]));
+		cout << lbound[i] << endl;
 	}
 	boost::split(str_dtype, pt.get<std::string>("data.dtype"), boost::is_any_of(";"));
-	for (int i = 0; i < str_std.size(); i++)
+	for (int i = 0; i < str_dtype.size(); i++)
 	{
 		dtype.push_back(stoi(str_dtype[i]));
 	}
@@ -85,12 +88,25 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 	Distribution::Thetha thetha;
 	double alpha, beta;
 	double q;
+	cout << "param original: " << endl;
+	for (int i = 0; i < count_opt_param; i++)
+	{
+		cout << _curr_thetha.param[i] << endl;
+	}
 	for (int i = 0; i < count_opt_param; i++)
 	{
 		alpha = (hbound[i] + lbound[i]) / 2.0;
 		beta = (hbound[i] - lbound[i]) / 2.0;
+		cout << "alpha = " << alpha << " beta = " << beta << endl;
+
 		q = alpha + beta * sin(_curr_thetha.param[i]);
+		cout << "q = " << q << " sin = "<<  sin(_curr_thetha.param[i]) << endl;
+
 		thetha.param.push_back(q);
+	}
+	for (int i = 0; i < count_opt_param; i++)
+	{
+		cout << thetha.param[i] << endl;
 	}
 	return thetha;
 }
@@ -150,7 +166,7 @@ Distribution::Thetha Abcde::crossover(int index)
 	_curr_thetha = posterior.thetha[index];
 	for (int i = 0; i < count_opt_param; i++)
 	{
-		_curr_thetha.param[i] = (int)((double)_curr_thetha.param[i] + si_1 * ((double)thetha_m.param[i] - (double)thetha_n.param[i]) + si_2 * ((double)thetha_b.param[i] - (double)_curr_thetha.param[i]) + b);
+		_curr_thetha.param[i] = ((double)_curr_thetha.param[i] + si_1 * ((double)thetha_m.param[i] - (double)thetha_n.param[i]) + si_2 * ((double)thetha_b.param[i] - (double)_curr_thetha.param[i]) + b);
 	}
 	_curr_thetha.delta = _curr_thetha.delta + si_1 * (thetha_m.delta - thetha_n.delta) + si_2 * (thetha_b.delta - _curr_thetha.delta) + b;
 	return bounds(_curr_thetha);
