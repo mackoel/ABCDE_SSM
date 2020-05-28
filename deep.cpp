@@ -84,6 +84,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	string str;
 	vector<string> split_str;
 	int index = 0;
+	int add_int;
 	string delimeter;
 	for (auto& key : keys)
 	{
@@ -100,9 +101,12 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 		}
 		boost::split(split_str, str, boost::is_any_of(delimeter));
 		if (dtype[index] == 0)
-			thetha.param[index] = (int)thetha.param[index];
-
-		split_str[index_in_keys[index]] = to_string(thetha.param[index]);
+		{
+			add_int = (int)thetha.param[index];
+			split_str[index_in_keys[index]] = to_string(add_int);
+		}
+		else
+		    split_str[index_in_keys[index]] = to_string(thetha.param[index]);
 		
 		index += 1;
 		string output;
