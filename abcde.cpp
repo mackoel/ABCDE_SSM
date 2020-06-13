@@ -51,14 +51,12 @@ void  Abcde::act_with_config_file()
 	for (int i = 0; i < str_hbound.size(); i++)
 	{
 		hbound.push_back(stod(str_hbound[i]));
-		cout << hbound[i] << endl;
 
 	}
 	boost::split(str_lbound, pt.get<std::string>("data.lbound"), boost::is_any_of(";"));
 	for (int i = 0; i < str_lbound.size(); i++)
 	{
 		lbound.push_back(stod(str_lbound[i]));
-		cout << lbound[i] << endl;
 	}
 	boost::split(str_dtype, pt.get<std::string>("data.dtype"), boost::is_any_of(";"));
 	for (int i = 0; i < str_dtype.size(); i++)
@@ -88,25 +86,13 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 	Distribution::Thetha thetha;
 	double alpha, beta;
 	double q;
-	cout << "param original: " << endl;
-	for (int i = 0; i < count_opt_param; i++)
-	{
-		cout << _curr_thetha.param[i] << endl;
-	}
+
 	for (int i = 0; i < count_opt_param; i++)
 	{
 		alpha = (hbound[i] + lbound[i]) / 2.0;
 		beta = (hbound[i] - lbound[i]) / 2.0;
-		cout << "alpha = " << alpha << " beta = " << beta << endl;
-
 		q = alpha + beta * sin(_curr_thetha.param[i]);
-		cout << "q = " << q << " sin = "<<  sin(_curr_thetha.param[i]) << endl;
-
 		thetha.param.push_back(q);
-	}
-	for (int i = 0; i < count_opt_param; i++)
-	{
-		cout << thetha.param[i] << endl;
 	}
 	return thetha;
 }
@@ -148,17 +134,15 @@ Distribution::Thetha Abcde::crossover(int index)
 	int m_index, n_index;
 	m_index = rand() % (count_iter - 1);
 	n_index = rand() % (count_iter - 1);
-	cout << "start index:" << index << " " << n_index << " " << m_index << endl;
 
-	while (m_index == index || n_index == index || m_index == n_index)
+	while (m_index == index)
 	{
 		m_index = rand() % (count_iter - 1);
-		n_index = rand() % (count_iter - 1);
-		cout << "index:" << index << " " << n_index << " " << m_index << endl;
-
 	}
-
-	cout << "endindex:" << index << " " << n_index << " " << m_index << endl;
+	while (m_index == index || m_index == n_index)
+	{
+		n_index = rand() % (count_iter - 1);
+	}
 	thetha_b = generator.get_prev_iter_with_weight(posterior, count_iter);
 	thetha_m = posterior.thetha[rand() % (count_iter - 1)];
 	thetha_n = posterior.thetha[rand() % (count_iter - 1)];
