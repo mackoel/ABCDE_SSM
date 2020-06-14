@@ -8,6 +8,10 @@ Deep::Deep(const string& param)
 	boost::property_tree::ini_parser::read_ini(config_file, propTree);
 	deep_exe = propTree.get<std::string>("data.name_exe_file");
 	index_score = stoi(propTree.get<std::string>("data.index_score"));
+	count_snp = stoi(propTree.get<std::string>("data.count_snp"));
+	count_weather_const = stoi(propTree.get<std::string>("data.count_weather_const"));
+	count_added_param = stoi(propTree.get<std::string>("data.count_added_param"));
+
 	vector<string> str_keys, str_index;
 	boost::split(str_keys, propTree.get<std::string>("data.keys"), boost::is_any_of(";"));
 	for (int i = 0; i < str_keys.size(); i++)
@@ -123,7 +127,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	boost::split(split_str, command, boost::is_any_of(" "));
 	int n = stoi(split_str[4]);
 	int l = stoi(split_str[6]);
-	int count_param = n * l +n + n * 18 + 5 + 2;
+	int count_param = n * l +n + n * count_snp + count_weather_const + count_added_param;//5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
 	string str_parts = "x;" + to_string(count_param) + ";";
 	propTree.put("default_model.parts", str_parts);
 
