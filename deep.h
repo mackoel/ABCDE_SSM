@@ -29,4 +29,7 @@ public:
 	int index_score;
 	vector<string> keys;// = 46; 46; 32
 	vector<int> index_in_keys;// = 5; 7; 5
+	int count_snp;
+	int count_weather_const;
+	int count_added_param;
 };
