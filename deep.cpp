@@ -6,19 +6,21 @@ Deep::Deep(const string& param)
 {
 	config_file = param;
 	boost::property_tree::ini_parser::read_ini(config_file, propTree);
-	deep_exe = propTree.get<std::string>("data.name_exe_file");
-	index_score = stoi(propTree.get<std::string>("data.index_score"));
-	count_snp = stoi(propTree.get<std::string>("data.count_snp"));
-	count_weather_const = stoi(propTree.get<std::string>("data.count_weather_const"));
-	count_added_param = stoi(propTree.get<std::string>("data.count_added_param"));
-
+	deep_exe = propTree.get<std::string>("abcde.name_exe_file");
+	index_score = stoi(propTree.get<std::string>("abcde.index_score"));
+	count_snp = stoi(propTree.get<std::string>("abcde.count_snp"));
+	count_weather_const = stoi(propTree.get<std::string>("abcde.count_weather_const"));
+	count_added_param = stoi(propTree.get<std::string>("abcde.count_added_param"));
+	index_n = stoi(propTree.get<std::string>("abcde.index_n"));
+	index_l = stoi(propTree.get<std::string>("abcde.index_l"));
+	ini_mode = stoi(propTree.get<std::string>("abcde.ini_mode"));
 	vector<string> str_keys, str_index;
-	boost::split(str_keys, propTree.get<std::string>("data.keys"), boost::is_any_of(";"));
+	boost::split(str_keys, propTree.get<std::string>("abcde.keys"), boost::is_any_of(";"));
 	for (int i = 0; i < str_keys.size(); i++)
 	{
 		keys.push_back(str_keys[i]);
 	}
-	boost::split(str_index, propTree.get<std::string>("data.index_in_keys"), boost::is_any_of(";"));
+	boost::split(str_index, propTree.get<std::string>("abcde.index_in_keys"), boost::is_any_of(";"));
 	for (int i = 0; i < str_index.size(); i++)
 	{
 		index_in_keys.push_back(stoi(str_index[i]));
@@ -125,11 +127,33 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	}
 	string command = propTree.get<std::string>("default_model.command");
 	boost::split(split_str, command, boost::is_any_of(" "));
-	int n = stoi(split_str[4]);
-	int l = stoi(split_str[6]);
-	int count_param = n * l +n + n * count_snp + count_weather_const + count_added_param;//5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
-	string str_parts = "x;" + to_string(count_param) + ";";
-	propTree.put("default_model.parts", str_parts);
+	int n = stoi(split_str[index_n]);
+	int l = stoi(split_str[index_l]);	
+	int count_param = n * l + n + n * count_snp + count_weather_const + count_added_param;//5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
+	if (ini_mode == INI_MODE::FUNC_AND_CROPS)
+	{
+		string str_parts = "x;" + to_string(count_param) + ";";
+		propTree.put("default_model.parts", str_parts);
+	}
+	else
+	{
+		int count_param = n * l + n + n * count_snp + count_weather_const + count_added_param;//5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
+		string str_parts;
+		for (auto& p : name_opt_param)
+		{
+			if (p == "x;")
+				str_parts += p + to_string(n * l) + ";";
+			else if (p == "beta;")
+				str_parts += p + to_string(n + n * count_snp) + ";";
+			else if (p == "concs;")
+				str_parts += p + to_string(count_weather_const) + ";";
+			else
+				str_parts += p + "1;";
+
+
+		}
+		propTree.put("default_model.parts", str_parts);
+	}
 
 	string mask_str;
 	for (int i = 0; i < count_param; i++)
