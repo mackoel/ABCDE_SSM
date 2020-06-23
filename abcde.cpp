@@ -37,28 +37,33 @@ void  Abcde::act_with_config_file()
 	mode = stoi(pt.get<std::string>("abcde.mode"));
 	count_opt_param = stoi(pt.get<std::string>("abcde.count_opt_param"));
 	vector<string> str_mean, str_std, str_hbound, str_lbound, str_dtype;
-	boost::split(str_mean, pt.get<std::string>("abcde.mean"), boost::is_any_of(";"));
+	string s = pt.get<std::string>("abcde.mean");
+	boost::split(str_mean, s, boost::is_any_of(";"));
 	for (int i = 0; i < str_mean.size(); i++)
 	{
 		mean.push_back(stod(str_mean[i]));
 	}
-	boost::split(str_std, pt.get<std::string>("abcde.std"), boost::is_any_of(";"));
+	s = pt.get<std::string>("abcde.std");
+	boost::split(str_std, s, boost::is_any_of(";"));
 	for (int i = 0; i < str_std.size(); i++)
 	{
 		std.push_back(stod(str_std[i]));
 	}
-	boost::split(str_hbound, pt.get<std::string>("abcde.hbound"), boost::is_any_of(";"));
+	s = pt.get<std::string>("abcde.hbound");
+	boost::split(str_hbound, s, boost::is_any_of(";"));
 	for (int i = 0; i < str_hbound.size(); i++)
 	{
 		hbound.push_back(stod(str_hbound[i]));
 
 	}
-	boost::split(str_lbound, pt.get<std::string>("abcde.lbound"), boost::is_any_of(";"));
+	s = pt.get<std::string>("abcde.lbound");
+	boost::split(str_lbound, s, boost::is_any_of(";"));
 	for (int i = 0; i < str_lbound.size(); i++)
 	{
 		lbound.push_back(stod(str_lbound[i]));
 	}
-	boost::split(str_dtype, pt.get<std::string>("abcde.dtype"), boost::is_any_of(";"));
+	s = pt.get<std::string>("abcde.dtype");
+	boost::split(str_dtype, s, boost::is_any_of(";"));
 	for (int i = 0; i < str_dtype.size(); i++)
 	{
 		dtype.push_back(stoi(str_dtype[i]));
