@@ -15,12 +15,14 @@ Deep::Deep(const string& param)
 	index_l = stoi(propTree.get<std::string>("abcde.index_l"));
 	ini_mode = stoi(propTree.get<std::string>("abcde.ini_mode"));
 	vector<string> str_keys, str_index;
-	boost::split(str_keys, propTree.get<std::string>("abcde.keys"), boost::is_any_of(";"));
+	string s = propTree.get<std::string>("abcde.keys");
+	boost::split(str_keys, s, boost::is_any_of(";"));
 	for (int i = 0; i < str_keys.size(); i++)
 	{
 		keys.push_back(str_keys[i]);
 	}
-	boost::split(str_index, propTree.get<std::string>("abcde.index_in_keys"), boost::is_any_of(";"));
+	s = propTree.get<std::string>("abcde.index_in_keys");
+	boost::split(str_index, s, boost::is_any_of(";"));
 	for (int i = 0; i < str_index.size(); i++)
 	{
 		index_in_keys.push_back(stoi(str_index[i]));
@@ -57,7 +59,7 @@ double Deep::run()
 
 double Deep::parse_result(string output)
 {
-	const char* pattern = ":[-+]?[0-9]*\.?[0-9]+";
+	const char* pattern = ":[-+]?[0-9]*\n.?[0-9]+";
 	boost::regex re(pattern);
 	int i = 1;
 	boost::sregex_iterator it(output.begin(), output.end(), re);
