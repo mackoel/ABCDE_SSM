@@ -31,9 +31,9 @@ void Solution::run()//
 	{
 		do {
 			main_model.curr_thetha = main_model.bounds(main_model.generator.generate_vector_param(Distribution::NORM_WITH_PARAM, main_model.count_opt_param, main_model.mean, main_model.std));
-			for (int i = 0; i < main_model.count_opt_param; i++)
+			for (int j = 0; j < main_model.count_opt_param; j++)
 			{
-				out << main_model.curr_thetha.param[i] << endl;
+				out << main_model.curr_thetha.param[j] << endl;
 			}
 			aux_model.act_with_config_file();
 			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
@@ -66,9 +66,9 @@ void Solution::run()//
 				out << "crossover: ";
 				main_model.curr_thetha = main_model.crossover(i);
 			}
-			for (int i = 0; i < main_model.count_opt_param; i++)
+			for (int j = 0; j < main_model.count_opt_param; j++)
 			{
-				out << main_model.curr_thetha.param[i] << endl;
+				out << main_model.curr_thetha.param[j] << endl;
 			}
 
 			aux_model.act_with_config_file();
@@ -125,7 +125,7 @@ void Solution::run()//
 	}
 	else if (main_model.mode == Parametrs::DELTA_MODE::MED)
 	{
-		//
+		
 	}
 	out << "MAIN ITERATION" << endl;
 	for (int t = 0; t < main_model.t; t++)
@@ -145,9 +145,9 @@ void Solution::run()//
 
 				main_model.curr_thetha = main_model.crossover(i);
 			}
-			for (int i = 0; i < main_model.count_opt_param; i++)
+			for (int j = 0; j < main_model.count_opt_param; j++)
 			{
-				out << main_model.curr_thetha.param[i] << endl;
+				out << main_model.curr_thetha.param[j] << endl;
 			}
 			aux_model.act_with_config_file();
 			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
