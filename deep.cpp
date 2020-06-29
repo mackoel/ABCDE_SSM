@@ -81,6 +81,8 @@ void Deep::act_with_config_file()
 {
 	create_tmp_deep_ini_file();
 	ofstream out("log_tmp_name_file.txt", std::ios::app);
+	cout << "name tmp file is: " << tmp_config_file << endl;
+
 	out << "name tmp file is: " << tmp_config_file << endl;
 	out.close();
 }
@@ -165,7 +167,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 		parms_str += "200;";
 
 	vector<string> numbers_i = { "16;", "7;", "7;", "7;", "7;", "7;", "7;" };
-	for (int i = 0; i < n + n * 18; i++)
+	for (int i = 0; i < n + n * count_snp; i++)
 		parms_str += "5;";
 	for (auto c : numbers_i)
 		parms_str += c;
@@ -174,7 +176,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	string dparms_str;
 	for (int i = 0; i < n * l; i++)
 		dparms_str += "200;";
-	for (int i = 0; i < n + n * 18; i++)
+	for (int i = 0; i < n + n * count_snp; i++)
 		dparms_str += "5.5;";
 	vector<string> numbers_d = { "16.5;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;" };
 	for (auto c : numbers_d)
@@ -184,7 +186,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	string lbounds_str;
 	for (int i = 0; i < n * l; i++)
 		lbounds_str += "0;";
-	for (int i = 0; i < n + n * 18; i++)
+	for (int i = 0; i < n + n * count_snp; i++)
 		lbounds_str += "-10;";
 	vector<string> numbers_l = { "15;", "0;", "6;", "1;", "0;", "1;", "1;" };
 	for (auto c : numbers_l)
@@ -195,7 +197,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	string hbounds_str;
 	for (int i = 0; i < n * l; i++)
 		hbounds_str += "1924;";
-	for (int i = 0; i < n + n * 18; i++)
+	for (int i = 0; i < n + n * count_snp; i++)
 		hbounds_str += "10;";
 	vector<string> numbers_h = { "30;", "15;", "15;", "15;", "20;", "100;", "7.5;" };
 	for (auto c : numbers_h)
@@ -221,9 +223,9 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	string partype_str;
 	for (int i = 0; i <n * l; i++)
 		partype_str += "1;";
-	for (int i = 0; i <n + n * 18; i++)
+	for (int i = 0; i <n + n * count_snp; i++)
 		partype_str += "0;";
-	for (int i = 0; i < 5 + 2; i++)
+	for (int i = 0; i < count_weather_const + count_added_param; i++)
 		partype_str += "0;";
 	propTree.put("default_model.partype", partype_str);
 
