@@ -81,8 +81,6 @@ void Deep::act_with_config_file()
 {
 	create_tmp_deep_ini_file();
 	ofstream out("log_tmp_name_file.txt", std::ios::app);
-	cout << "name tmp file is: " << tmp_config_file << endl;
-
 	out << "name tmp file is: " << tmp_config_file << endl;
 	out.close();
 }
