@@ -59,7 +59,7 @@ double Deep::run()
 
 double Deep::parse_result(string output)
 {
-	const char* pattern = ":[-+]?[0-9]*\n.?[0-9]+";
+	const char* pattern = ":[-+]?[0-9]*\\.?[0-9]+";
 	boost::regex re(pattern);
 	int i = 1;
 	boost::sregex_iterator it(output.begin(), output.end(), re);
