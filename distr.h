@@ -31,7 +31,7 @@ class Distribution
 			double lambda;
 		//	vector<variant<int, double>> param;
 		//	vector<boost::any> param;
-			vector<int> param;
+			vector<double> param;
 			double delta;
 		}Thetha;
 
