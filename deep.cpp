@@ -51,14 +51,16 @@ double Deep::run()
 	out << "deep end" << endl;
 
     output = data.back();
-
+	cout << output << endl;
 	res = parse_result(output);
+
 	out.close();
 	return res;
 }
 
 double Deep::parse_result(string output)
 {
+	cout << output << endl;
 	const char* pattern = ":[-+]?[0-9]*\\.?[0-9]+";
 	boost::regex re(pattern);
 	int i = 1;
@@ -69,6 +71,8 @@ double Deep::parse_result(string output)
 	{
 		if(i == index_score)
 		{
+
+
 			return stod(it->str().erase(0, 1));
 		}
 		i++;
@@ -81,8 +85,6 @@ void Deep::act_with_config_file()
 {
 	create_tmp_deep_ini_file();
 	ofstream out("log_tmp_name_file.txt", std::ios::app);
-	cout << "name tmp file is: " << tmp_config_file << endl;
-
 	out << "name tmp file is: " << tmp_config_file << endl;
 	out.close();
 }
