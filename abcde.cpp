@@ -103,7 +103,7 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 }
 Distribution::Thetha Abcde::crossover(int index)
 {
-	ofstream out("log_crossover_index.txt", std::ios::app);
+//ofstream out("log_crossover_index.txt", std::ios::app);
 /*
 	double si_1 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), si_2 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), b = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.001, 0.001);
 	Distribution::Thetha thetha_b, thetha_m, thetha_n, _curr_thetha;
