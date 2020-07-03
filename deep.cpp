@@ -71,8 +71,6 @@ double Deep::parse_result(string output)
 	{
 		if(i == index_score)
 		{
-
-
 			return stod(it->str().erase(0, 1));
 		}
 		i++;
@@ -96,6 +94,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	int index = 0;
 	int add_int;
 	string delimeter;
+	int count_phyl_param = name_opt_param.size() - 3;
 	for (auto& key : keys)
 	{
 		str = propTree.get<std::string>(key);
@@ -138,10 +137,103 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	{
 		string str_parts = "x;" + to_string(count_param) + ";";
 		propTree.put("default_model.parts", str_parts);
+
+		string mask_str;
+		for (int i = 0; i < count_param; i++)
+			mask_str += "0;";
+		propTree.put("default_model.mask", mask_str);
+
+		string parms_str;
+		for (int i = 0; i < n * l; i++)
+			parms_str += "200;";
+
+		vector<string> numbers_i = { "16;", "7;", "7;", "7;", "7;", "7;", "7;" };
+		int k = 0;
+		for (auto c : numbers_i)
+		{
+			if (k < count_weather_const + count_added_param)
+				parms_str += c;
+			k = k + 1;
+		}
+		propTree.put("default_model.parms", parms_str);
+
+		string dparms_str;
+		for (int i = 0; i < n * l; i++)
+			dparms_str += "200;";
+		for (int i = 0; i < n + n * count_snp; i++)
+			dparms_str += "5.5;";
+		vector<string> numbers_d = { "16.5;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;" };
+		k = 0;
+		for (auto c : numbers_d)
+		{
+			if (k < count_weather_const + count_added_param)
+				dparms_str += c;
+			k = k + 1;
+		}
+		propTree.put("default_model.dparms", dparms_str);
+
+		string lbounds_str;
+		for (int i = 0; i < n * l; i++)
+			lbounds_str += "0;";
+		for (int i = 0; i < n + n * count_snp; i++)
+			lbounds_str += "-10;";
+		vector<string> numbers_l = { "15;", "0;", "6;", "1;", "0;", "1;", "1;" };
+		k = 0;
+		for (auto c : numbers_l)
+		{
+			if (k < count_weather_const + count_added_param)
+				lbounds_str += c;
+			k = k + 1;
+		}
+
+		propTree.put("default_model.lbound", lbounds_str);
+
+
+		string hbounds_str;
+		for (int i = 0; i < n * l; i++)
+			hbounds_str += "1924;";
+		for (int i = 0; i < n + n * count_snp; i++)
+			hbounds_str += "10;";
+		vector<string> numbers_h = { "30;", "15;", "15;", "15;", "20;", "100;", "7.5;" };
+		k = 0;
+		for (auto c : numbers_h)
+		{
+			if (k < count_weather_const + count_added_param)
+				hbounds_str += c;
+			k = k + 1;
+		}
+		propTree.put("default_model.hbound", hbounds_str);
+
+
+		string tweak_str;
+		for (int i = 0; i < count_param; i++)
+			tweak_str += "1;";
+		propTree.put("default_model.tweak", tweak_str);
+
+		string limited_str;
+		for (int i = 0; i < count_param; i++)
+			limited_str += "1;";
+		propTree.put("default_model.limited", limited_str);
+
+		string scale_str;
+		for (int i = 0; i < count_param; i++)
+			scale_str += "1;";
+		propTree.put("default_model.scale", scale_str);
+
+		string partype_str;
+		for (int i = 0; i < n * l; i++)
+			partype_str += "1;";
+		for (int i = 0; i < n + n * count_snp; i++)
+			partype_str += "0;";
+		for (int i = 0; i < count_weather_const + count_added_param; i++)
+			partype_str += "0;";
+		propTree.put("default_model.partype", partype_str);
+
+		write_ini(tmp_config_file, propTree);
 	}
 	else
 	{
-		count_param = n * l + n + n * count_snp + count_weather_const + count_added_param;//5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
+		count_param = n * l + n + n * count_snp + count_weather_const + count_added_param + count_phyl_param;//5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
 		string str_parts;
 		for (auto& p : name_opt_param)
 		{
@@ -157,169 +249,76 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 
 		}
 		propTree.put("default_model.parts", str_parts);
+
+
+		string mask_str;
+		for (int i = 0; i < count_param; i++)
+			mask_str += "0;";
+		propTree.put("default_model.mask", mask_str);
+
+		string parms_str;
+		for (int i = 0; i < n * l; i++)
+			parms_str += "200;";
+
+		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
+			parms_str += "5;";
+		
+		propTree.put("default_model.parms", parms_str);
+
+		string dparms_str;
+		for (int i = 0; i < n * l; i++)
+			dparms_str += "200;";
+		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
+			dparms_str += "5.5;";
+		
+		propTree.put("default_model.dparms", dparms_str);
+
+		string lbounds_str;
+		for (int i = 0; i < n * l; i++)
+			lbounds_str += "0;";
+		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
+			lbounds_str += "-10;";
+		
+
+		propTree.put("default_model.lbound", lbounds_str);
+
+
+		string hbounds_str;
+		for (int i = 0; i < n * l; i++)
+			hbounds_str += "1924;";
+		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
+			hbounds_str += "50;";
+
+		propTree.put("default_model.hbound", hbounds_str);
+
+
+		string tweak_str;
+		for (int i = 0; i < count_param; i++)
+			tweak_str += "1;";
+		propTree.put("default_model.tweak", tweak_str);
+
+		string limited_str;
+		for (int i = 0; i < count_param; i++)
+			limited_str += "1;";
+		propTree.put("default_model.limited", limited_str);
+
+		string scale_str;
+		for (int i = 0; i < count_param; i++)
+			scale_str += "1;";
+		propTree.put("default_model.scale", scale_str);
+
+		string partype_str;
+		for (int i = 0; i < n * l; i++)
+			partype_str += "1;";
+		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
+			partype_str += "0;";
+		propTree.put("default_model.partype", partype_str);
+
+		write_ini(tmp_config_file, propTree);
 	}
-
-	string mask_str;
-	for (int i = 0; i < count_param; i++)
-		mask_str += "0;";
-	propTree.put("default_model.mask", mask_str);
-
-	string parms_str;
-	for (int i = 0; i < n * l; i++)
-		parms_str += "200;";
-
-	vector<string> numbers_i = { "16;", "7;", "7;", "7;", "7;", "7;", "7;" };
-	for (int i = 0; i < n + n * count_snp; i++)
-		parms_str += "5;";
-	for (auto c : numbers_i)
-		parms_str += c;
-	propTree.put("default_model.parms", parms_str);
-
-	string dparms_str;
-	for (int i = 0; i < n * l; i++)
-		dparms_str += "200;";
-	for (int i = 0; i < n + n * count_snp; i++)
-		dparms_str += "5.5;";
-	vector<string> numbers_d = { "16.5;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;" };
-	for (auto c : numbers_d)
-		dparms_str += c;
-	propTree.put("default_model.dparms", dparms_str);
-
-	string lbounds_str;
-	for (int i = 0; i < n * l; i++)
-		lbounds_str += "0;";
-	for (int i = 0; i < n + n * count_snp; i++)
-		lbounds_str += "-10;";
-	vector<string> numbers_l = { "15;", "0;", "6;", "1;", "0;", "1;", "1;" };
-	for (auto c : numbers_l)
-		lbounds_str += c;
-	propTree.put("default_model.lbound", lbounds_str);
-
-
-	string hbounds_str;
-	for (int i = 0; i < n * l; i++)
-		hbounds_str += "1924;";
-	for (int i = 0; i < n + n * count_snp; i++)
-		hbounds_str += "10;";
-	vector<string> numbers_h = { "30;", "15;", "15;", "15;", "20;", "100;", "7.5;" };
-	for (auto c : numbers_h)
-		hbounds_str += c;
-	propTree.put("default_model.hbound", hbounds_str);
-
-
-	string tweak_str;
-	for (int i = 0; i < count_param; i++)
-		tweak_str += "1;";
-	propTree.put("default_model.tweak", tweak_str);
-
-	string limited_str;
-	for (int i = 0; i < count_param; i++)
-		limited_str += "1;";
-	propTree.put("default_model.limited", limited_str);
-
-	string scale_str;
-	for (int i = 0; i < count_param; i++)
-		scale_str += "1;";
-	propTree.put("default_model.scale", scale_str);
-
-	string partype_str;
-	for (int i = 0; i <n * l; i++)
-		partype_str += "1;";
-	for (int i = 0; i <n + n * count_snp; i++)
-		partype_str += "0;";
-	for (int i = 0; i < count_weather_const + count_added_param; i++)
-		partype_str += "0;";
-	propTree.put("default_model.partype", partype_str);
-
-	write_ini(tmp_config_file, propTree); 
 }
 	
 
-/*
-	string str_lambda = "penalty;readpenalty;2;2;" + to_string(int(thetha.lambda)) + ";";
-	propTree.put("default_target.l1_pen", str_lambda);
-
-	string str_n_l = exe_file + " -P 1 -N " + to_string(int(thetha.n)) + " -L " + to_string(int(thetha.l)) + " " + param_exe_file + "\0";
-	propTree.put("default_model.command", str_n_l);
-
-	int count_param = thetha.n * thetha.l + thetha.n + thetha.n * 18 + 5 + 2;
-	string str_parts = "x;" + to_string(count_param) + ";";
-	propTree.put("default_model.parts", str_parts);
-
-	string mask_str;
-	for (int i = 0; i < count_param; i++)
-		mask_str += "0;";
-	propTree.put("default_model.mask", mask_str);
-
-	string parms_str;
-	for (int i = 0; i < thetha.n * thetha.l; i++)
-		parms_str += "200;";
-
-	vector<string> numbers_i = { "16;", "7;", "7;", "7;", "7;", "7;", "7;" };
-	for (int i = 0; i < thetha.n + thetha.n * 18; i++)
-		parms_str += "5;";
-	for (auto c : numbers_i)
-		parms_str += c;
-	propTree.put("default_model.parms", parms_str);
-
-	string dparms_str;
-	for (int i = 0; i < thetha.n * thetha.l; i++)
-		dparms_str += "200;";
-	for (int i = 0; i < thetha.n + thetha.n * 18; i++)
-		dparms_str += "5.5;";
-	vector<string> numbers_d = { "16.5;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;", "7.1;" };
-	for (auto c : numbers_d)
-		dparms_str += c;
-	propTree.put("default_model.dparms", dparms_str);
-
-	string lbounds_str;
-	for (int i = 0; i < thetha.n * thetha.l; i++)
-		lbounds_str += "0;";
-	for (int i = 0; i < thetha.n + thetha.n * 18; i++)
-		lbounds_str += "-10;";
-	vector<string> numbers_l = { "15;", "0;", "6;", "1;", "0;", "1;", "1;" };
-	for (auto c : numbers_l)
-		lbounds_str += c;
-	propTree.put("default_model.lbound", lbounds_str);
-
-
-	string hbounds_str;
-	for (int i = 0; i < thetha.n * thetha.l; i++)
-		hbounds_str += "1924;";
-	for (int i = 0; i < thetha.n + thetha.n * 18; i++)
-		hbounds_str += "10;";
-	vector<string> numbers_h = { "30;", "15;", "15;", "15;", "20;", "100;", "7.5;" };
-	for (auto c : numbers_h)
-		hbounds_str += c;
-	propTree.put("default_model.hbound", hbounds_str);
-
-
-	string tweak_str;
-	for (int i = 0; i < count_param; i++)
-		tweak_str += "1;";
-	propTree.put("default_model.tweak", tweak_str);
-
-	string limited_str;
-	for (int i = 0; i < count_param; i++)
-		limited_str += "1;";
-	propTree.put("default_model.limited", limited_str);
-
-	string scale_str;
-	for (int i = 0; i < count_param; i++)
-		scale_str += "1;";
-	propTree.put("default_model.scale", scale_str);
-
-	string partype_str;
-	for (int i = 0; i < thetha.n * thetha.l; i++)
-		partype_str += "1;";
-	for (int i = 0; i < thetha.n + thetha.n * 18; i++)
-		partype_str += "0;";
-	for (int i = 0; i < 5 + 2; i++)
-		partype_str += "0;";
-	propTree.put("default_model.partype", partype_str);
-
-	write_ini(tmp_config_file, propTree);
-}*/
 
 void Deep::create_tmp_deep_ini_file()
 {
