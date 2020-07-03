@@ -41,8 +41,8 @@ double Deep::run()
 	ofstream out("log_deep_work.txt", std::ios::app);
 
 	out << "deep start" << endl;
-	out << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file << endl;
-	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file, bp::std_out > is);
+	out << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file + " -d" << endl;
+	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file + " -d", bp::std_out > is);
 	while (c.running() && std::getline(is, line) && !line.empty())
 	{
 		cout << line << endl;
@@ -50,9 +50,7 @@ double Deep::run()
 	}
 	c.wait();
 	out << "deep end" << endl;
-	cout << "deep end" << endl;
-
-    output = data.back();
+        output = data.back();
 	cout << output << endl;
 	res = parse_result(output);
 
