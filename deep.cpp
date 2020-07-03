@@ -45,10 +45,12 @@ double Deep::run()
 	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file, bp::std_out > is);
 	while (c.running() && std::getline(is, line) && !line.empty())
 	{
+		cout << line << endl;
 		data.push_back(line);
 	}
 	c.wait();
 	out << "deep end" << endl;
+	cout << "deep end" << endl;
 
     output = data.back();
 	cout << output << endl;
@@ -94,7 +96,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	int index = 0;
 	int add_int;
 	string delimeter;
-	int count_phyl_param = name_opt_param.size() - 3;
+	int count_phyl_param = name_opt_param.size() - 4;
 	for (auto& key : keys)
 	{
 		str = propTree.get<std::string>(key);
@@ -268,9 +270,10 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 		string dparms_str;
 		for (int i = 0; i < n * l; i++)
 			dparms_str += "200;";
-		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
+		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param-2; i++)
 			dparms_str += "5.5;";
-		
+		dparms_str += "5;";
+		dparms_str += "5.5;";
 		propTree.put("default_model.dparms", dparms_str);
 
 		string lbounds_str;
@@ -310,8 +313,10 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 		string partype_str;
 		for (int i = 0; i < n * l; i++)
 			partype_str += "1;";
-		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
+		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param-2; i++)
 			partype_str += "0;";
+		partype_str += "1;";
+		partype_str += "0;";
 		propTree.put("default_model.partype", partype_str);
 
 		write_ini(tmp_config_file, propTree);
