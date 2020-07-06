@@ -53,8 +53,8 @@ double Deep::run()
         output = data.back();
 	cout << output << endl;
 	res = parse_result(output);
-
 	out.close();
+	fclose(tmp_config_file);
 	return res;
 }
 
@@ -321,7 +321,6 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	}
 }
 	
-
 
 void Deep::create_tmp_deep_ini_file()
 {
