@@ -54,7 +54,8 @@ double Deep::run()
 	cout << output << endl;
 	res = parse_result(output);
 	out.close();
-	fclose(tmp_config_file);
+	ofstream tmp_file(tmp_config_file);
+	tmp_file.close();
 	return res;
 }
 
