@@ -39,8 +39,7 @@ double Deep::run()
 	std::vector<std::string> data;
 	std::string line;
 	ofstream out("log_deep_work.txt", std::ios::app);
-
-/*	out << "deep start" << endl;
+	out << "deep start" << endl;
 	out << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file << endl;
 	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file, bp::std_out > is);
 	while (c.running() && std::getline(is, line) && !line.empty())
@@ -50,17 +49,12 @@ double Deep::run()
 	}
 	c.wait();
 	out << "deep end" << endl;
-
-    output = data.back();
+        output = data.back();
 	cout << output << endl;
 	res = parse_result(output);
-
-	out.close();*/
-	cout << tmp_config_file << endl;
+	out.close();
 	std::remove(tmp_config_file.c_str());
-	
-	res = 5.0;
-	return res;
+		return res;
 }
 
 double Deep::parse_result(string output)
@@ -70,7 +64,6 @@ double Deep::parse_result(string output)
 	int i = 1;
 	boost::sregex_iterator it(output.begin(), output.end(), re);
 	boost::sregex_iterator end;
-
 	for (; it != end; ++it)
 	{
 		if(i == index_score)
@@ -79,8 +72,6 @@ double Deep::parse_result(string output)
 		}
 		i++;
 	}
-
-	
 }
 
 void Deep::act_with_config_file()
@@ -110,7 +101,6 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 				delimeter = d;
 				break;
 			}
-
 		}
 		boost::split(split_str, str, boost::is_any_of(delimeter));
 		if (dtype[index] == 0)
@@ -130,7 +120,6 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 			    output += delimeter;
 		}
 		propTree.put(key, output);
-
 	}
 	string command = propTree.get<std::string>("default_model.command");
 	boost::split(split_str, command, boost::is_any_of(" "));
@@ -328,8 +317,6 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	}
 }
 	
-
-
 void Deep::create_tmp_deep_ini_file()
 {
 	const char* name = tmpnam(NULL);
