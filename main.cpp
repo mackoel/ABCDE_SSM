@@ -7,6 +7,6 @@ int main(int argc, char *argv[])
 	Abcde abcde(param.config_file);
 	Deep deep(param.config_file);
 	Solution solution(abcde, deep, param);
-	solution.run();
+	solution.run_manager();
 	return 0;
 }
