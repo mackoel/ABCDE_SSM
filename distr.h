@@ -26,11 +26,7 @@ class Distribution
 
 		typedef struct
 		{
-			int n;
-			int l;
-			double lambda;
-		//	vector<variant<int, double>> param;
-		//	vector<boost::any> param;
+
 			vector<double> param;
 			double delta;
 		}Thetha;
@@ -54,8 +50,6 @@ class Distribution
 
 		double getLrand(double l);
 		
-		double variancy(const Posterior& posterior, const int mode, const int size);
-
 		double max_weight(double* w, const int size);
 		
 		Thetha get_prev_iter_with_weight(const Posterior& posterior, const int size);
