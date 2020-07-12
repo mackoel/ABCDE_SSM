@@ -99,6 +99,7 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 		q = alpha + beta * sin(_curr_thetha.param[i]);
 		thetha.param.push_back(q);
 	}
+	thetha.delta = _curr_thetha.delta;
 	return thetha;
 }
 Distribution::Thetha Abcde::crossover(int index)
@@ -149,8 +150,8 @@ Distribution::Thetha Abcde::crossover(int index)
 		n_index = rand() % (count_iter - 1);
 	}
 	thetha_b = generator.get_prev_iter_with_weight(posterior, count_iter);
-	thetha_m = posterior.thetha[rand() % (count_iter - 1)];
-	thetha_n = posterior.thetha[rand() % (count_iter - 1)];
+	thetha_m = posterior.thetha[m_index];
+	thetha_n = posterior.thetha[n_index];
 
 	_curr_thetha = posterior.thetha[index];
 	for (int i = 0; i < count_opt_param; i++)
