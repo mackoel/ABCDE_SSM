@@ -40,9 +40,9 @@ double Deep::run()
 	std::string line;
 	ofstream out("log_deep_work.txt", std::ios::app);
 
-	out << "deep start" << endl;
-	out << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file + " -d" << endl;
-	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file + " -d", bp::std_out > is);
+/*	out << "deep start" << endl;
+	out << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file << endl;
+	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file, bp::std_out > is);
 	while (c.running() && std::getline(is, line) && !line.empty())
 	{
 		cout << line << endl;
@@ -50,18 +50,21 @@ double Deep::run()
 	}
 	c.wait();
 	out << "deep end" << endl;
-        output = data.back();
+
+    output = data.back();
 	cout << output << endl;
 	res = parse_result(output);
-	out.close();
-	ofstream tmp_file(tmp_config_file);
-	tmp_file.close();
+
+	out.close();*/
+	cout << tmp_config_file << endl;
+	std::remove(tmp_config_file.c_str());
+	
+	res = 5.0;
 	return res;
 }
 
 double Deep::parse_result(string output)
 {
-	cout << output << endl;
 	const char* pattern = ":[-+]?[0-9]*\\.?[0-9]+";
 	boost::regex re(pattern);
 	int i = 1;
@@ -295,8 +298,11 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 
 
 		string tweak_str;
-		for (int i = 0; i < count_param; i++)
+		for (int i = 0; i < count_param - count_phyl_param; i++)
 			tweak_str += "1;";
+		for (int i = 0; i < count_phyl_param; i++)
+			tweak_str += "0;";
+
 		propTree.put("default_model.tweak", tweak_str);
 
 		string limited_str;
@@ -322,6 +328,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	}
 }
 	
+
 
 void Deep::create_tmp_deep_ini_file()
 {
