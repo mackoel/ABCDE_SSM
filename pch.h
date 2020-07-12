@@ -29,6 +29,7 @@ namespace po = boost::program_options;
 #include "distr.h"
 #include "abcde.h"
 #include "deep.h"
+#include "run_manager.h"
 #include "solution.h"
 
 
