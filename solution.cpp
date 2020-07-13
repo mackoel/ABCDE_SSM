@@ -36,8 +36,7 @@ void Solution::run_manager()
 			run_approximate(manager.iter, manager.index_thetha);
 			break;
 	    case Run_manager::STATE::RUN:
-			cout << "run" << endl;
-		    run(manager.iter, manager.index_thetha);
+		        run(manager.iter, manager.index_thetha);
 			break;
 	}
 }
@@ -243,7 +242,7 @@ void Solution::run(int iter, int index_thetha)
 		copy_posterior(main_model.new_posterior, main_model.posterior);
 		for (int i = 0; i < main_model.count_iter; i++)
 			manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
-        print_log(t);
+                print_log(t);
 		out << "done_copy" << endl;
 
 	}
