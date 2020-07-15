@@ -19,7 +19,14 @@ using namespace std;
 #include<boost/regex.hpp>
 #include<boost/algorithm/cxx11/any_of.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/mpi/environment.hpp>
+#include <boost/mpi/communicator.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/mpi/collectives.hpp>
 
+#include <iostream>
+namespace mpi = boost::mpi;
 using boost::property_tree::ptree;
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
@@ -31,6 +38,6 @@ namespace po = boost::program_options;
 #include "deep.h"
 #include "run_manager.h"
 #include "solution.h"
-
+#include "mpi.h"
 
 #endif //PCH_H
