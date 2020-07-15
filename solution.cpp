@@ -39,34 +39,40 @@ void Solution::run_manager()
 void Solution::run_init(int iter, int index_thetha)
 {
 	int tag = 1; // Usual MPI - tag any message
-	
 	if (world.rank() == 0) 
 	{
 		ofstream out("log_iteration.txt", std::ios::app);
-		for (int i = index_thetha; i < main_model.count_iter / (world.size() - 1); i++)
+		vector<Distribution::Thetha> all_thetha;
+		for (int j = 0; j < world.size()-1; j++)
 		{
-			for (int j = 0; j < world.size() - 1; j++)
-			{	
+			vector<vector<double>> param;
 			
+			for (int i = index_thetha; i < main_model.count_iter / (world.size() - 1); i++)
+			{
 				main_model.curr_thetha = main_model.bounds(main_model.generator.generate_vector_param(Distribution::NORM_WITH_PARAM, main_model.count_opt_param, main_model.mean, main_model.std));
-				for (int s = 0; s < main_model.count_opt_param; s++)
-				{
-					cout << main_model.curr_thetha.param[s] << endl;
-				}
-				vector<double> param = main_model.curr_thetha.param;
-				world.send(j+1, tag, param);
-				world.recv(mpi::any_source, tag, error);
-			    main_model.posterior.thetha[i * (world.size() - 1) + j] = main_model.curr_thetha;
-			    main_model.posterior.w[i * (world.size() - 1) + j] = 1.0 / main_model.count_iter;
-		      	main_model.posterior.error[i * (world.size() - 1) + j] = error;
-		    	main_model.new_posterior.thetha[i * (world.size() - 1) + j] = main_model.curr_thetha;
-		    	main_model.new_posterior.w[i * (world.size() - 1) + j] = 1.0 / main_model.count_iter;
-				main_model.new_posterior.error[i * (world.size() - 1) + j] = error;
-		     	main_model.posterior.thetha[i * (world.size() - 1) + j].delta = main_model.new_posterior.thetha[i * (world.size() - 1) + j].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
-			    manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, i * (world.size() - 1) + j, main_model.count_opt_param);
-
+				param.push_back(main_model.curr_thetha.param);
+				all_thetha.push_back(main_model.curr_thetha);
 			}
+			world.send(j + 1, tag, param);
 		}
+		for (int j = 0; j < world.size()-1; j++)
+		{
+			    vector<double> error;
+                world.recv(mpi::any_source, tag, error);
+				int rank = world.rank();
+				for (int i = index_thetha; i < main_model.count_iter / (world.size() - 1); i++)
+				{ 
+					main_model.posterior.thetha[rank * main_model.count_iter / (world.size() - 1) + i] = all_thetha[rank * main_model.count_iter / (world.size() - 1) + i];
+			        main_model.posterior.w[rank * main_model.count_iter / (world.size() - 1) + i] = 1.0 / main_model.count_iter;
+		      	    main_model.posterior.error[rank * main_model.count_iter / (world.size() - 1) + i] = error[i];
+		    	    main_model.new_posterior.thetha[rank * main_model.count_iter / (world.size() - 1) + i] = all_thetha[rank * main_model.count_iter / (world.size() - 1) + i];
+		    	    main_model.new_posterior.w[rank * main_model.count_iter / (world.size() - 1) + i] = 1.0 / main_model.count_iter;
+				    main_model.new_posterior.error[rank * main_model.count_iter / (world.size() - 1) + i] = error[i];
+		         	main_model.posterior.thetha[rank * main_model.count_iter / (world.size() - 1) + i].delta = main_model.new_posterior.thetha[rank * main_model.count_iter / (world.size() - 1) + i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+			        manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, rank * main_model.count_iter / (world.size() - 1) + i, main_model.count_opt_param);
+				}   
+		}
+				
 		print_log(-1);
 		manager.state = Run_manager::STATE::RUN_APPROXIMATE;
 		manager.change_state(manager.state);
@@ -75,17 +81,19 @@ void Solution::run_init(int iter, int index_thetha)
 	}
 	else 
 	{
+		vector<vector<double>> param;
+		world.recv(0, tag, param);
+		vector<double>error;
+
 		for (int i = 0; i < main_model.count_iter / (world.size() - 1); i++)
 		{
-			vector<double> param;
 			Distribution::Thetha curr_thetha;
-			world.recv(0, tag, param);
-			curr_thetha.param = param;
+			curr_thetha.param = param[i];
 			aux_model.act_with_config_file();
 			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
-            double _err = aux_model.run();
-			world.send(0, tag, _err); 
-		}
+			error.push_back(aux_model.run());
+		}	
+		world.send(0, tag, error); 
 		run_approximate(0, 0);
 	}
 }
@@ -97,75 +105,53 @@ void Solution::run_approximate(int iter, int index_thetha)
 	{
 		ofstream out("log_iteration.txt", std::ios::app);
 		out << "RUN_APPROXIMATE" << endl;
-
 		for (int t = iter; t < main_model.start_iter; t++)
 		{
-			for (int i = index_thetha; i < main_model.count_iter/(world.size() - 1); i++)
+			vector<Distribution::Thetha> all_thetha;
+			for (int j = 0; j < world.size() - 1; j++)
 			{
-				
-				for (int j = 0; j < world.size() - 1; j++)
+				vector<vector<double>> param;
+
+				for (int i = index_thetha; i < main_model.count_iter / (world.size() - 1); i++)
 				{
 					double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
-				    out << "choice var = " << choice << endl;
-				    if (choice < 0.05)
-				    {
-					    out << "mutation: ";
-					    main_model.curr_thetha = main_model.mutation(i);
-				    }
-				    else
-				    {
-					    out << "crossover: ";
-					    main_model.curr_thetha = main_model.crossover(i);
-				    }
-			
-					vector<double> param = main_model.curr_thetha.param;
-
-					world.send(j + 1, tag, param);
-					world.recv(mpi::any_source, tag, error);
-					out << "error = " << error << endl;
-					alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i * (world.size() - 1) + j);
-
-					out << "alpha original = " << alpha << endl;
+					if (choice < 0.05)
+						main_model.curr_thetha = main_model.mutation(i);
+					else
+						main_model.curr_thetha = main_model.crossover(i);
+					param.push_back(main_model.curr_thetha.param);
+					all_thetha.push_back(main_model.curr_thetha);
+				}
+				world.send(j + 1, tag, param);
+			}
+			for (int j = 0; j < world.size() - 1; j++)
+			{
+				vector<double> error;
+				world.recv(mpi::any_source, tag, error);
+				int rank = world.rank();
+				for (int i = index_thetha; i < main_model.count_iter / (world.size() - 1); i++)
+				{
+					alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error[i], rank * main_model.count_iter / (world.size() - 1) + i);
 					alpha = min(1.0, alpha);
-					out << "alpha after = " << alpha << endl;
 					if (main_model.accept_alpha(alpha))
 					{
-						out << "accept" << endl;
-						main_model.new_posterior.thetha[i * (world.size() - 1) + j] = main_model.curr_thetha;
-						main_model.new_posterior.w[i * (world.size() - 1) + j] = main_model.generator.get_new_weight(main_model.posterior.thetha[i * (world.size() - 1) + j], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
-						main_model.new_posterior.error[i * (world.size() - 1) + j] = error;
+						main_model.new_posterior.thetha[rank * main_model.count_iter / (world.size() - 1) + i] = all_thetha[rank * main_model.count_iter / (world.size() - 1) + i];
+						main_model.new_posterior.w[rank * main_model.count_iter / (world.size() - 1) + i] = main_model.generator.get_new_weight(main_model.posterior.thetha[rank * main_model.count_iter / (world.size() - 1) + i], all_thetha[rank * main_model.count_iter / (world.size() - 1) + i], main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
+						main_model.new_posterior.error[rank * main_model.count_iter / (world.size() - 1) + i] = error[i];
 						main_model.normalize_weights();
 					}
-					else
-						out << "not accept" << endl;
-					manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i * (world.size() - 1) + j, main_model.count_opt_param);
+					manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, rank * main_model.count_iter / (world.size() - 1) + i, main_model.count_opt_param);
+
 				}
 			}
-			out << "begin_copy" << endl;
-			out << "before" << endl;
-
-			for (int i = 0; i < main_model.count_iter; i++)
-			{
-				for (int k = 0; k < main_model.count_opt_param; k++)
-					out << main_model.posterior.thetha[i].param[k] << endl;
-			}
-			out << "after" << endl;
-
 			copy_posterior(main_model.posterior, main_model.new_posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 
-			for (int i = 0; i < main_model.count_iter; i++)
-			{
-				for (int k = 0; k < main_model.count_opt_param; k++)
-					out << main_model.posterior.thetha[i].param[k] << endl;
-			}
 			copy_posterior(main_model.new_posterior, main_model.posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 			print_log(t);
-			out << "done_copy" << endl;
-
 		}
 		if (main_model.mode == Parametrs::DELTA_MODE::MEAN)
 		{
@@ -185,21 +171,23 @@ void Solution::run_approximate(int iter, int index_thetha)
 		manager.change_state(manager.state);
 		manager.change_delta(main_model.posterior.delta_one);
 		out.close();
-		run(0, 0);
+		run(0, 0);		
 	}
 	else
 	{
+		vector<vector<double>> param;
+		world.recv(0, tag, param);
+		vector<double>error;
+
 		for (int i = 0; i < main_model.count_iter / (world.size() - 1); i++)
 		{
-			vector<double> param;
 			Distribution::Thetha curr_thetha;
-			world.recv(0, tag, param);
-			curr_thetha.param = param;
+			curr_thetha.param = param[i];
 			aux_model.act_with_config_file();
 			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
-			double _err = aux_model.run();
-			world.send(0, tag, _err);
+			error.push_back(aux_model.run());
 		}
+		world.send(0, tag, error);
 		run(0, 0);
 	}
 }
@@ -207,97 +195,80 @@ void Solution::run_approximate(int iter, int index_thetha)
 void Solution::run(int iter, int index_thetha)
 {
 	int tag = 1; // Usual MPI - tag any message
-	if (world.rank() == 0) // receiver
+	if (world.rank() == 0)
 	{
 		ofstream out("log_iteration.txt", std::ios::app);
-
-		out << "RUN" << endl;
-		for (int t = iter; t < main_model.t; t++)
+		out << "RUN_APPROXIMATE" << endl;
+		for (int t = iter; t < main_model.start_iter; t++)
 		{
-			for (int i = index_thetha; i < main_model.count_iter / (world.size() - 1); i++)
+			vector<Distribution::Thetha> all_thetha;
+			for (int j = 0; j < world.size() - 1; j++)
 			{
-				
-				for (int j = 0; j < world.size() - 1; j++)
+				vector<vector<double>> param;
+
+				for (int i = index_thetha; i < main_model.count_iter / (world.size() - 1); i++)
 				{
 					double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
-					out << "choice var = " << choice << endl;
 					if (choice < 0.05)
-					{
-						out << "mutation: ";
 						main_model.curr_thetha = main_model.mutation(i);
-					}
 					else
-					{
-						out << "crossover: ";
 						main_model.curr_thetha = main_model.crossover(i);
-					}
-					vector<double> param = main_model.curr_thetha.param;
-
-					world.send(j + 1, tag, param);
-					world.recv(mpi::any_source, tag, error);
-					out << "error = " << error << endl;
-
-					alpha = main_model.get_statistics(Parametrs::MODE::AUX, main_model.curr_thetha, error, i * (world.size() - 1) + j);
-					out << "alpha original = " << alpha << endl;
+					param.push_back(main_model.curr_thetha.param);
+					all_thetha.push_back(main_model.curr_thetha);
+				}
+				world.send(j + 1, tag, param);
+			}
+			for (int j = 0; j < world.size() - 1; j++)
+			{
+				vector<double> error;
+				world.recv(mpi::any_source, tag, error);
+				int rank = world.rank();
+				for (int i = index_thetha; i < main_model.count_iter / (world.size() - 1); i++)
+				{
+					alpha = main_model.get_statistics(Parametrs::MODE::AUX, main_model.curr_thetha, error[i], rank * main_model.count_iter / (world.size() - 1) + i);
 					alpha = min(1.0, alpha);
-					out << "alpha after = " << alpha << endl;
 					if (main_model.accept_alpha(alpha))
 					{
-						out << "accept" << endl;
-						main_model.new_posterior.thetha[i * (world.size() - 1) + j] = main_model.curr_thetha;
-						main_model.new_posterior.w[i * (world.size() - 1) + j] = main_model.generator.get_new_weight(main_model.posterior.thetha[i * (world.size() - 1) + j], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
-						main_model.new_posterior.error[i * (world.size() - 1) + j] = error;
+						main_model.new_posterior.thetha[rank * main_model.count_iter / (world.size() - 1) + i] = all_thetha[rank * main_model.count_iter / (world.size() - 1) + i];
+						main_model.new_posterior.w[rank * main_model.count_iter / (world.size() - 1) + i] = main_model.generator.get_new_weight(main_model.posterior.thetha[rank * main_model.count_iter / (world.size() - 1) + i], all_thetha[rank * main_model.count_iter / (world.size() - 1) + i], main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
+						main_model.new_posterior.error[rank * main_model.count_iter / (world.size() - 1) + i] = error[i];
 						main_model.normalize_weights();
-
 					}
-					else
-						out << "not accept" << endl;
-					manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i * (world.size() - 1) + j, main_model.count_opt_param);
+					manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, rank * main_model.count_iter / (world.size() - 1) + i, main_model.count_opt_param);
+
 				}
-
 			}
-
-			out << "begin_copy" << endl;
-			out << "before" << endl;
-
-			for (int i = 0; i < main_model.count_iter; i++)
-			{
-				for (int k = 0; k < main_model.count_opt_param; k++)
-					out << main_model.posterior.thetha[i].param[k] << endl;
-			}
-			out << "after" << endl;
 			copy_posterior(main_model.posterior, main_model.new_posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
-			for (int i = 0; i < main_model.count_iter; i++)
-			{
-				for (int k = 0; k < main_model.count_opt_param; k++)
-					out << main_model.posterior.thetha[i].param[k] << endl;
-			}
+
 			copy_posterior(main_model.new_posterior, main_model.posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 			print_log(t);
-			out << "done_copy" << endl;
-
 		}
+		
 		manager.state = Run_manager::STATE::END;
 		manager.change_state(manager.state);
+		manager.change_delta(main_model.posterior.delta_one);
 		out.close();
 	}
 	else
 	{
+		vector<vector<double>> param;
+		world.recv(0, tag, param);
+		vector<double>error;
+
 		for (int i = 0; i < main_model.count_iter / (world.size() - 1); i++)
 		{
-			vector<double> param;
 			Distribution::Thetha curr_thetha;
-			world.recv(0, tag, param);
-			curr_thetha.param = param;
+			curr_thetha.param = param[i];
 			aux_model.act_with_config_file();
 			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
-			double _err = aux_model.run();
-			world.send(0, tag, _err);
+			error.push_back(aux_model.run());
 		}
+		world.send(0, tag, error);
+		run(0, 0);
 	}
 }
 
