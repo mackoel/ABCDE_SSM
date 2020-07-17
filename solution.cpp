@@ -84,10 +84,11 @@ void Solution::run_init(int iter, int index_thetha)
 		    	    main_model.new_posterior.w[rank * main_model.count_iter / (world.size()) + i] = 1.0 / main_model.count_iter;
 				    main_model.new_posterior.error[rank * main_model.count_iter / (world.size()) + i] = error[i];
 		         	main_model.posterior.thetha[rank * main_model.count_iter / (world.size()) + i].delta = main_model.new_posterior.thetha[rank * main_model.count_iter / (world.size() ) + i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
-			        manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, rank * main_model.count_iter / (world.size() ) + i, main_model.count_opt_param);
 				}   
 		}
-				
+		for(int i = 0; i < main_model.count_iter; i++)
+		    manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, i, main_model.count_opt_param);
+
 		print_log(-1);
 		manager.state = Run_manager::STATE::RUN_APPROXIMATE;
 		manager.change_state(manager.state);
@@ -96,19 +97,23 @@ void Solution::run_init(int iter, int index_thetha)
 	}
 	else 
 	{
-		vector<vector<double>> param;
-		world.recv(0, tag, param);
-		vector<double>error;
-		for (int i = 0; i < main_model.count_iter / world.size(); i++)
+		for (int t = iter; t < main_model.start_iter; t++)
 		{
-			Distribution::Thetha curr_thetha;
-			curr_thetha.param = param[i];
-			aux_model.act_with_config_file();
-			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
-			error.push_back(aux_model.run());
-		}	
-		world.send(0, tag, error); 
-		run_approximate(0, 0);
+			vector<vector<double>> param;
+			world.recv(0, tag, param);
+			vector<double>error;
+			for (int i = 0; i < main_model.count_iter / world.size(); i++)
+			{
+				Distribution::Thetha curr_thetha;
+				curr_thetha.param = param[i];
+				aux_model.act_with_config_file();
+				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+				error.push_back(aux_model.run());
+			}
+			world.send(0, tag, error);
+			
+		}
+		run_approximate(0, 0);	
 	}
 }
 
@@ -155,7 +160,6 @@ void Solution::run_approximate(int iter, int index_thetha)
 					main_model.new_posterior.error[i] = error;
 					main_model.normalize_weights();
 				}
-				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 			}
 			for (int j = 1; j < world.size(); j++)
 			{
@@ -173,15 +177,9 @@ void Solution::run_approximate(int iter, int index_thetha)
 						main_model.new_posterior.error[rank * main_model.count_iter / (world.size()) + i] = error[i];
 						main_model.normalize_weights();
 					}
-					manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, rank * main_model.count_iter / (world.size()) + i, main_model.count_opt_param);
-
 				}
 			}
 			copy_posterior(main_model.posterior, main_model.new_posterior);
-			for (int i = 0; i < main_model.count_iter; i++)
-				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
-
-			copy_posterior(main_model.new_posterior, main_model.posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 			print_log(t);
@@ -208,19 +206,23 @@ void Solution::run_approximate(int iter, int index_thetha)
 	}
 	else
 	{
-		vector<vector<double>> param;
-		world.recv(0, tag, param);
-		vector<double> error;
-
-		for (int i = 0; i < main_model.count_iter / (world.size()); i++)
+		for (int t = iter; t < main_model.start_iter; t++)
 		{
-			Distribution::Thetha curr_thetha;
-			curr_thetha.param = param[i];
-			aux_model.act_with_config_file();
-			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
-			error.push_back(aux_model.run());
+			vector<vector<double>> param;
+			world.recv(0, tag, param);
+			vector<double> error;
+
+			for (int i = 0; i < main_model.count_iter / (world.size()); i++)
+			{
+				Distribution::Thetha curr_thetha;
+				curr_thetha.param = param[i];
+				aux_model.act_with_config_file();
+				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+				error.push_back(aux_model.run());
+			}
+			world.send(0, tag, error);
+			
 		}
-		world.send(0, tag, error);
 		run(0, 0);
 	}
 }
@@ -268,7 +270,6 @@ void Solution::run(int iter, int index_thetha)
 					main_model.new_posterior.error[i] = error;
 					main_model.normalize_weights();
 				}
-				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 			}
 			for (int j = 1; j < world.size(); j++)
 			{
@@ -286,15 +287,10 @@ void Solution::run(int iter, int index_thetha)
 						main_model.new_posterior.error[rank * main_model.count_iter / (world.size()) + i] = error[i];
 						main_model.normalize_weights();
 					}
-					manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, rank * main_model.count_iter / (world.size()) + i, main_model.count_opt_param);
 
 				}
 			}
 			copy_posterior(main_model.posterior, main_model.new_posterior);
-			for (int i = 0; i < main_model.count_iter; i++)
-				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
-
-			copy_posterior(main_model.new_posterior, main_model.posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 			print_log(t);
@@ -305,19 +301,22 @@ void Solution::run(int iter, int index_thetha)
 	}
 	else
 	{
-		vector<vector<double>> param;
-		world.recv(0, tag, param);
-		vector<double> error;
-
-		for (int i = 0; i < main_model.count_iter / (world.size()); i++)
+		for (int t = iter; t < main_model.start_iter; t++)
 		{
-			Distribution::Thetha curr_thetha;
-			curr_thetha.param = param[i];
-			aux_model.act_with_config_file();
-			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
-			error.push_back(aux_model.run());
+			vector<vector<double>> param;
+			world.recv(0, tag, param);
+			vector<double> error;
+
+			for (int i = 0; i < main_model.count_iter / (world.size()); i++)
+			{
+				Distribution::Thetha curr_thetha;
+				curr_thetha.param = param[i];
+				aux_model.act_with_config_file();
+				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+				error.push_back(aux_model.run());
+			}
+			world.send(0, tag, error);
 		}
-		world.send(0, tag, error);
 	}
 }
 
