@@ -41,6 +41,8 @@ void Solution::run_init(int iter, int index_thetha)
 	if (world.rank() == 0)
 	{
 		ofstream out("log_iteration.txt", std::ios::app);
+		out << "INIT" << endl;
+
 		vector<Distribution::Thetha> all_thetha;
 		for (int j = 0; j < world.size(); j++)
 		{
@@ -97,22 +99,18 @@ void Solution::run_init(int iter, int index_thetha)
 	}
 	else 
 	{
-		for (int t = iter; t < main_model.start_iter; t++)
+		vector<vector<double>> param;
+		world.recv(0, tag, param);
+		vector<double>error;
+		for (int i = 0; i < main_model.count_iter / world.size(); i++)
 		{
-			vector<vector<double>> param;
-			world.recv(0, tag, param);
-			vector<double>error;
-			for (int i = 0; i < main_model.count_iter / world.size(); i++)
-			{
-				Distribution::Thetha curr_thetha;
-				curr_thetha.param = param[i];
-				aux_model.act_with_config_file();
-				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
-				error.push_back(aux_model.run());
-			}
-			world.send(0, tag, error);
-			
+			Distribution::Thetha curr_thetha;
+			curr_thetha.param = param[i];
+			aux_model.act_with_config_file();
+			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+			error.push_back(aux_model.run());
 		}
+		world.send(0, tag, error);	
 		run_approximate(0, 0);	
 	}
 }
@@ -341,7 +339,7 @@ void Solution::print_log(int iter)
 		}
 		logfile << "w = " << main_model.posterior.w[i] << " ";
 		logfile << "error = " << main_model.posterior.error[i] << " ";
-
+		logfile << "delta = " << main_model.posterior.thetha[i].delta << " ";
 		logfile << endl;
 	}
 	logfile.close();
