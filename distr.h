@@ -26,16 +26,23 @@ class Distribution
 
 		typedef struct
 		{
-
 			vector<double> param;
 			double delta;
+			friend class boost::serialization::access;
+
+			template<class Archive>
+			void serialize(Archive& ar, const unsigned int version) {
+				ar& delta;
+				BOOST_SERIALIZATION_NVP(param);
+			}
+
 		}Thetha;
 
 		typedef struct
 		{
 			Thetha * thetha;
 			double * w;
-			double* error;
+			double * error;
 			double delta_one;
 		}Posterior;
 
