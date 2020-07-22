@@ -14,7 +14,6 @@ using namespace std;
 #include <boost/algorithm/string/join.hpp>
 #include "mpi.h"
 
-#endif //PCH_H
 
 int main(int *argc, char* argv[])
 {
