@@ -9,8 +9,6 @@ private:
 	double error, alpha;
 	Parametrs param;
 	Run_manager manager;
-	mpi::environment env;
-	mpi::communicator world;
 public:
 	Solution(const Abcde& _main_model, const Deep& _aux_model, const Parametrs& _param);
 
