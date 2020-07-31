@@ -19,9 +19,11 @@ using namespace std;
 #include<boost/regex.hpp>
 #include<boost/algorithm/cxx11/any_of.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/math/distributions/normal.hpp> 
 #include <iostream>
 
 using boost::property_tree::ptree;
+using boost::math::normal;
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
@@ -32,7 +34,8 @@ namespace po = boost::program_options;
 #include "deep.h"
 #include "run_manager.h"
 #include "solution.h"
+#ifdef MPIZE
 #include "mpi.h"
-
+#endif
 
 #endif //PCH_H
