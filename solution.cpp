@@ -8,7 +8,7 @@ Solution::Solution(const Abcde& _main_model, const Deep& _aux_model, const Param
 	error = 0.0;
 	alpha = 0.0;
 }
-inline void Solution::copy_posterior(Distribution::Posterior &posterior_to,Distribution::Posterior& posterior_from)
+inline void Solution::copy_posterior(Distribution::Posterior& posterior_to, Distribution::Posterior& posterior_from)
 {
 	for (int i = 0; i < main_model.count_iter; i++)
 	{
@@ -23,23 +23,26 @@ void Solution::run_manager()
 	manager.read_log_file(main_model.posterior, main_model.new_posterior, main_model.count_iter, main_model.count_opt_param);
 	switch (manager.state)
 	{
-	    case Run_manager::STATE::INIT:
-		    run_init(manager.iter, manager.index_thetha);
-		    break;
-		case Run_manager::STATE::RUN_APPROXIMATE:
-			run_approximate(manager.iter, manager.index_thetha);
-			break;
-	    case Run_manager::STATE::RUN:
-		    run(manager.iter, manager.index_thetha);
-			break;
+	case Run_manager::STATE::INIT:
+		run_init(manager.iter, manager.index_thetha);
+		break;
+	case Run_manager::STATE::RUN_APPROXIMATE:
+		run_approximate(manager.iter, manager.index_thetha);
+		break;
+	case Run_manager::STATE::RUN:
+		run(manager.iter, manager.index_thetha);
+		break;
 	}
 }
 
 void Solution::run_init(int iter, int index_thetha)
 {
+#ifdef MPIZE
 	int tag = 0;
 	int rank;
-	int size;
+#endif
+	int size = 1;
+#ifdef MPIZE
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	cout << "This rank is " << rank << endl;
@@ -48,6 +51,7 @@ void Solution::run_init(int iter, int index_thetha)
 	MPI_Status status;
 	if (rank == 0)
 	{
+#endif
 		ofstream out("log_iteration.txt", std::ios::app);
 		out << "INIT" << endl;
 
@@ -61,12 +65,14 @@ void Solution::run_init(int iter, int index_thetha)
 				param.push_back(main_model.curr_thetha.param);
 				all_thetha.push_back(main_model.curr_thetha);
 			}
+#ifdef MPIZE
 			if (j != 0)
 			{
 				cout << "send for process = " << rank << endl;
-				for(int k = 0; k < main_model.count_iter/size; k++)
-				    MPI_Send(&param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
+				for (int k = 0; k < main_model.count_iter / size; k++)
+					MPI_Send(&param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
 			}
+#endif
 		}
 		for (int i = 0; i < main_model.count_iter / size; i++)
 		{
@@ -84,38 +90,41 @@ void Solution::run_init(int iter, int index_thetha)
 			main_model.posterior.thetha[i].delta = main_model.new_posterior.thetha[i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
 			manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, i, main_model.count_opt_param);
 		}
+#ifdef MPIZE
 		for (int j = 1; j < size; j++)
 		{
-			    vector<double> error;
-				error.resize(main_model.count_iter / size);
-                MPI_Recv(&error[0], main_model.count_iter / size, MPI_DOUBLE, j, tag, MPI_COMM_WORLD, &status);
-				for (int i = 0; i < main_model.count_iter / size; i++)
-				{ 
-					main_model.posterior.thetha[j * main_model.count_iter / (size) + i] = all_thetha[j * main_model.count_iter / (size) + i];
-			        main_model.posterior.w[j * main_model.count_iter / (size) + i] = 1.0 / main_model.count_iter;
-		      	    main_model.posterior.error[j * main_model.count_iter / (size) + i] = error[i];
-		    	    main_model.new_posterior.thetha[j * main_model.count_iter / (size ) + i] = all_thetha[j * main_model.count_iter / (size) + i];
-		    	    main_model.new_posterior.w[j * main_model.count_iter / (size) + i] = 1.0 / main_model.count_iter;
-				    main_model.new_posterior.error[j * main_model.count_iter / (size) + i] = error[i];
-		         	main_model.posterior.thetha[j * main_model.count_iter / (size) + i].delta = main_model.new_posterior.thetha[j * main_model.count_iter / (size ) + i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
-				}   
+			vector<double> error;
+			error.resize(main_model.count_iter / size);
+			MPI_Recv(&error[0], main_model.count_iter / size, MPI_DOUBLE, j, tag, MPI_COMM_WORLD, &status);
+			for (int i = 0; i < main_model.count_iter / size; i++)
+			{
+				main_model.posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
+				main_model.posterior.w[j * main_model.count_iter / (size)+i] = 1.0 / main_model.count_iter;
+				main_model.posterior.error[j * main_model.count_iter / (size)+i] = error[i];
+				main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
+				main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = 1.0 / main_model.count_iter;
+				main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
+				main_model.posterior.thetha[j * main_model.count_iter / (size)+i].delta = main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+			}
 		}
-		for(int i = 0; i < main_model.count_iter; i++)
-		    manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, i, main_model.count_opt_param);
+#endif
+		for (int i = 0; i < main_model.count_iter; i++)
+			manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, i, main_model.count_opt_param);
 
 		print_log(-1);
 		manager.state = Run_manager::STATE::RUN_APPROXIMATE;
 		manager.change_state(manager.state);
 		out.close();
 		run_approximate(0, 0);
+#ifdef MPIZE
 	}
-	else 
+	else
 	{
 		vector<vector<double>> param(main_model.count_iter / size, vector<double>(main_model.count_opt_param));
 		vector<double>error;
 		cout << "recv = " << rank << endl;
-		for(int k = 0; k < main_model.count_iter / size; k++)
-		    MPI_Recv(&param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag,  MPI_COMM_WORLD, &status);
+		for (int k = 0; k < main_model.count_iter / size; k++)
+			MPI_Recv(&param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
 		for (int i = 0; i < main_model.count_iter / size; i++)
 		{
 			Distribution::Thetha curr_thetha;
@@ -125,21 +134,26 @@ void Solution::run_init(int iter, int index_thetha)
 			error.push_back(aux_model.run());
 		}
 		MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
-		run_approximate(0, 0);	
+		run_approximate(0, 0);
 	}
+#endif
 }
 
 void Solution::run_approximate(int iter, int index_thetha)
 {
+#ifdef MPIZE
 	int tag = 0;
 	int rank;
-	int size;
+#endif
+	int size = 1;
+#ifdef MPIZE
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 
 	MPI_Status status;
-	if (rank == 0) 
+	if (rank == 0)
 	{
+#endif
 		ofstream out("log_iteration.txt", std::ios::app);
 		out << "RUN_APPROXIMATE" << endl;
 		for (int t = iter; t < main_model.start_iter; t++)
@@ -159,46 +173,66 @@ void Solution::run_approximate(int iter, int index_thetha)
 					param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
 				}
+#ifdef MPIZE
 				if (j != 0)
 				{
 					for (int k = 0; k < main_model.count_iter / size; k++)
 						MPI_Send(&param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
 				}
+#endif
 			}
 			for (int i = 0; i < main_model.count_iter / (size); i++)
 			{
 				double error;
 				main_model.curr_thetha = all_thetha[i];
+				for (int s = 0; s < main_model.count_opt_param; s++)
+					out << main_model.curr_thetha.param[s] << endl;
 				aux_model.act_with_config_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
 				error = aux_model.run();
-				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error,  i);
+				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i);
+				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
+				out << "alpha = " << alpha << endl;
+
 				if (main_model.accept_alpha(alpha))
 				{
+					out << "accept alpha"<< endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior.thetha[i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
 					main_model.new_posterior.error[i] = error;
 					main_model.normalize_weights();
 				}
+				else
+					out << "not accept" << endl;
 			}
+#ifdef MPIZE
 			for (int j = 1; j < size; j++)
 			{
 				vector<double> error(main_model.count_iter / (size));
 				MPI_Recv(&error[0], main_model.count_iter / size, MPI_DOUBLE, j, tag, MPI_COMM_WORLD, &status);
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
-					alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error[i], rank * main_model.count_iter / (size) + i);
+					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
+					for (int s = 0; s < main_model.count_opt_param; s++)
+						out << main_model.curr_thetha.param[s] << endl;
+					alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error[i], rank * main_model.count_iter / (size)+i);
+					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
+					out << "alpha = " << alpha << endl;
 					if (main_model.accept_alpha(alpha))
 					{
-						main_model.new_posterior.thetha[j * main_model.count_iter / (size) + i] = all_thetha[j * main_model.count_iter / (size ) + i];
-						main_model.new_posterior.w[j * main_model.count_iter / (size) + i] = main_model.generator.get_new_weight(main_model.posterior.thetha[j * main_model.count_iter / (size) + i], all_thetha[j * main_model.count_iter / (size) + i], main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
-						main_model.new_posterior.error[j * main_model.count_iter / (size) + i] = error[i];
+						out << "accept alpha" << endl;
+						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
+						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior.thetha[j * main_model.count_iter / (size)+i], all_thetha[j * main_model.count_iter / (size)+i], main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
+						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
 						main_model.normalize_weights();
 					}
+					else
+						out << "not accept" << endl;
 				}
 			}
+#endif
 			copy_posterior(main_model.posterior, main_model.new_posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
@@ -222,7 +256,8 @@ void Solution::run_approximate(int iter, int index_thetha)
 		manager.change_state(manager.state);
 		manager.change_delta(main_model.posterior.delta_one);
 		out.close();
-		run(0, 0);		
+		run(0, 0);
+#ifdef MPIZE
 	}
 	else
 	{
@@ -245,21 +280,26 @@ void Solution::run_approximate(int iter, int index_thetha)
 		}
 		run(0, 0);
 	}
+#endif
 }
 
 void Solution::run(int iter, int index_thetha)
 {
+#ifdef MPIZE
 	int tag = 0;
 	int rank;
-	int size;
+#endif
+	int size = 1;
+#ifdef MPIZE
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Status status;
 	if (rank == 0)
 	{
+#endif
 		ofstream out("log_iteration.txt", std::ios::app);
 		out << "RUN" << endl;
-		for (int t = iter; t < main_model.start_iter; t++)
+		for (int t = iter; t < main_model.t; t++)
 		{
 			vector<Distribution::Thetha> all_thetha;
 			for (int j = 0; j < size; j++)
@@ -276,11 +316,13 @@ void Solution::run(int iter, int index_thetha)
 					param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
 				}
+#ifdef MPIZE
 				if (j != 0)
 				{
 					for (int k = 0; k < main_model.count_iter / size; k++)
 						MPI_Send(&param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
 				}
+#endif
 			}
 			for (int i = 0; i < main_model.count_iter / (size); i++)
 			{
@@ -289,33 +331,50 @@ void Solution::run(int iter, int index_thetha)
 				aux_model.act_with_config_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
 				error = aux_model.run();
+				for (int s = 0; s < main_model.count_opt_param; s++)
+					out << main_model.curr_thetha.param[s] << endl;
 				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i);
+				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
+				out << "alpha = " << alpha << endl;
 				if (main_model.accept_alpha(alpha))
 				{
+					out << "accept alpha" << endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior.thetha[i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
 					main_model.new_posterior.error[i] = error;
 					main_model.normalize_weights();
 				}
+				else
+					out << "not accept" << endl;
 			}
+#ifdef MPIZE
 			for (int j = 1; j < size; j++)
 			{
 				vector<double> error(main_model.count_iter / (size));
 				MPI_Recv(&error[0], main_model.count_iter / size, MPI_DOUBLE, j, tag, MPI_COMM_WORLD, &status);
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
+					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
+					for (int s = 0; s < main_model.count_opt_param; s++)
+						out << main_model.curr_thetha.param[s] << endl;
 					alpha = main_model.get_statistics(Parametrs::MODE::AUX, main_model.curr_thetha, error[i], rank * main_model.count_iter / (size)+i);
+					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
+					out << "alpha = " << alpha << endl;
 					if (main_model.accept_alpha(alpha))
 					{
+						out << "accept alpha" << endl;
 						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
 						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior.thetha[j * main_model.count_iter / (size)+i], all_thetha[j * main_model.count_iter / (size)+i], main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
 						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
 						main_model.normalize_weights();
 					}
+					else
+						out << "not accept" << endl;
 				}
 			}
+#endif
 			copy_posterior(main_model.posterior, main_model.new_posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
@@ -324,10 +383,11 @@ void Solution::run(int iter, int index_thetha)
 		manager.state = Run_manager::STATE::END;
 		manager.change_state(manager.state);
 		out.close();
+#ifdef MPIZE
 	}
 	else
 	{
-		for (int t = iter; t < main_model.start_iter; t++)
+		for (int t = iter; t < main_model.t; t++)
 		{
 			vector<vector<double>> param(main_model.count_iter / size, vector<double>(main_model.count_opt_param));
 			vector<double> error;
@@ -344,6 +404,7 @@ void Solution::run(int iter, int index_thetha)
 			MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
 		}
 	}
+#endif
 }
 
 void Solution::print_log(int iter)
@@ -363,7 +424,7 @@ void Solution::print_log(int iter)
 
 			}
 			else
-			    logfile << "param[" << j << "] = " << main_model.posterior.thetha[i].param[j] << " ";
+				logfile << "param[" << j << "] = " << main_model.posterior.thetha[i].param[j] << " ";
 		}
 		logfile << "w = " << main_model.posterior.w[i] << " ";
 		logfile << "error = " << main_model.posterior.error[i] << " ";
