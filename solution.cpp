@@ -145,7 +145,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 	int tag = 0;
 	int rank;
 #endif
-	int size = 1;
+	int size;
 #ifdef MPIZE
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -190,6 +190,8 @@ void Solution::run_approximate(int iter, int index_thetha)
 				aux_model.act_with_config_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
 				error = aux_model.run();
+				out << "error ready" << error << endl;
+
 				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i);
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
@@ -216,15 +218,15 @@ void Solution::run_approximate(int iter, int index_thetha)
 					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
 					for (int s = 0; s < main_model.count_opt_param; s++)
 						out << main_model.curr_thetha.param[s] << endl;
-					alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error[i], rank * main_model.count_iter / (size)+i);
+					alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error[i], j * main_model.count_iter / (size)+i);
 					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
 					out << "alpha = " << alpha << endl;
 					if (main_model.accept_alpha(alpha))
 					{
 						out << "accept alpha" << endl;
-						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
-						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior.thetha[j * main_model.count_iter / (size)+i], all_thetha[j * main_model.count_iter / (size)+i], main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
+						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
+						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior.thetha[j * main_model.count_iter / (size)+i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
 						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
 						main_model.normalize_weights();
 					}
@@ -289,7 +291,7 @@ void Solution::run(int iter, int index_thetha)
 	int tag = 0;
 	int rank;
 #endif
-	int size = 1;
+	int size;
 #ifdef MPIZE
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -298,7 +300,7 @@ void Solution::run(int iter, int index_thetha)
 	{
 #endif
 		ofstream out("log_iteration.txt", std::ios::app);
-		out << "RUN" << endl;
+		cout << "RUN" << endl;
 		for (int t = iter; t < main_model.t; t++)
 		{
 			vector<Distribution::Thetha> all_thetha;
@@ -358,15 +360,15 @@ void Solution::run(int iter, int index_thetha)
 					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
 					for (int s = 0; s < main_model.count_opt_param; s++)
 						out << main_model.curr_thetha.param[s] << endl;
-					alpha = main_model.get_statistics(Parametrs::MODE::AUX, main_model.curr_thetha, error[i], rank * main_model.count_iter / (size)+i);
+					alpha = main_model.get_statistics(Parametrs::MODE::AUX, main_model.curr_thetha, error[i], j * main_model.count_iter / (size)+i);
 					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
 					out << "alpha = " << alpha << endl;
 					if (main_model.accept_alpha(alpha))
 					{
 						out << "accept alpha" << endl;
-						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
-						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior.thetha[j * main_model.count_iter / (size)+i], all_thetha[j * main_model.count_iter / (size)+i], main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
+						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
+						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior.thetha[j * main_model.count_iter / (size)+i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
 						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
 						main_model.normalize_weights();
 					}
