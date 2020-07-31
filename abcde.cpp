@@ -89,7 +89,7 @@ Distribution::Thetha Abcde::mutation(int index)
 Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 {
 	Distribution::Thetha thetha;
-	double alpha, beta;
+	double alpha, beta, delta;
 	double q;
 
 	for (int i = 0; i < count_opt_param; i++)
@@ -99,7 +99,10 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 		q = alpha + beta * sin(_curr_thetha.param[i]);
 		thetha.param.push_back(q);
 	}
-	thetha.delta = _curr_thetha.delta;
+	alpha = (0.0 + 5.0) / 2.0;
+	beta = (5.0 - 0.0) / 2.0;
+	q = q = alpha + beta * sin(_curr_thetha.delta);
+	thetha.delta = q;
 	return thetha;
 }
 Distribution::Thetha Abcde::crossover(int index)
@@ -165,27 +168,39 @@ Distribution::Thetha Abcde::crossover(int index)
 double Abcde::get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double _error, int i)
 {
 	double psi_curr, psi_prev;
+	cout << "start1" << endl;
+
 	if (_mode == Parametrs::MODE::INIT)
 	{
+		cout << "start2" << endl;
+
+		cout << "error = " << _error << endl;
+		cout << "post error = " << posterior.error[i] << endl;
+
 		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, _curr_thetha.delta);
 	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, posterior.thetha[i].delta);
+		cout << psi_curr << endl;
+		cout << psi_prev << endl;
 	}
 	else
 	{
         psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, posterior.delta_one);
 	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, posterior.delta_one);
 	}
-	double curr_kernel_func = 1, prev_kernel_func = 1;
+	double curr_kernel_func = 1.0, prev_kernel_func = 1.0;
 	for (int j = 0; j < count_opt_param; j++)
 	{
 		curr_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _curr_thetha.param[j], mean[j], std[j]);
+		cout << "curr " <<  curr_kernel_func << endl;
 		prev_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], mean[j], std[j]);
+		cout << "prev" << prev_kernel_func << endl;
 	}
 	double curr_alpha = curr_kernel_func * psi_curr;
+	cout << "c_al" << curr_alpha << endl;
 	double prev_alpha = prev_kernel_func * psi_prev;
-	//double curr_alpha = ((generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _curr_thetha.n, MU_N, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _curr_thetha.l, MU_L,  SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _curr_thetha.lambda, MU_LAMBDA, SIGMA)) * psi_curr);
-	//double prev_alpha = ((generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].n, MU_N, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].l, MU_L, SIGMA) * generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].lambda, MU_LAMBDA, SIGMA)) * psi_prev);
-
+	cout << "p_al" << prev_alpha << endl;
+	if (prev_alpha == 0.0)
+		return 1.0;
 	double alpha = curr_alpha / prev_alpha;
 	return alpha;
 }
