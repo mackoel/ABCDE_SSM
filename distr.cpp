@@ -82,12 +82,14 @@ Distribution::Thetha Distribution::get_prev_iter_with_weight(const Distribution:
 
 double Distribution::get_new_weight(Distribution::Thetha& prev_thetha, Distribution::Thetha& curr_thetha, const int count_opt_param, vector<double>& mean, vector<double>& std)
 {
-	double curr_kernel_func = 1, prev_kernel_func = 1;
+	double curr_kernel_func = 1.0, prev_kernel_func = 1.0;
 	for (int j = 0; j < count_opt_param; j++)
 	{
 		curr_kernel_func *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], mean[j], std[j]);
 		prev_kernel_func *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, prev_thetha.param[j], mean[j], std[j]);
 	}
+	if (prev_kernel_func == 0.0)
+		return 1.0;
 	return curr_kernel_func / prev_kernel_func;//add kernel_function_with_error
 }
 
@@ -104,7 +106,7 @@ Distribution::Thetha Distribution::generate_vector_param(Distribution::TYPE_DIST
 double Distribution::kernelNormalSampleWithParam(double x, double mean, double var)
 {
 	normal norm(mean, var);
-	return cdf(norm, x);
+	return pdf(norm, x);
 }
 
 double Distribution::kernel_function(Distribution::TYPE_DISTR mode, double x, const double param1, const double param2)
