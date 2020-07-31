@@ -101,20 +101,10 @@ Distribution::Thetha Distribution::generate_vector_param(Distribution::TYPE_DIST
 	return thetha;
 }
 
-double Distribution::erf(double x)
-{
-	double y = 1.0 / (1.0 + 0.3275911 * x);
-	return 1 - (((((
-		+1.061405429 * y
-		- 1.453152027) * y
-		+ 1.421413741) * y
-		- 0.284496736) * y
-		+ 0.254829592) * y)
-		* exp(-x * x);
-}
 double Distribution::kernelNormalSampleWithParam(double x, double mean, double var)
 {
-	return 0.5 * (1 + erf((x - mean) / (var * sqrt(2.))));
+	normal norm(mean, var);
+	return cdf(norm, x);
 }
 
 double Distribution::kernel_function(Distribution::TYPE_DISTR mode, double x, const double param1, const double param2)
