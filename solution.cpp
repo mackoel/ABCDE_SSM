@@ -201,7 +201,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 				{
 					out << "accept alpha"<< endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior.thetha[i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
+					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.mean, main_model.std);//change-make generator private for abcde
 					main_model.new_posterior.error[i] = error;
 					main_model.normalize_weights();
 				}
@@ -226,7 +226,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 					{
 						out << "accept alpha" << endl;
 						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
-						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior.thetha[j * main_model.count_iter / (size)+i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
+						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.mean, main_model.std);//change-make generator private for abcde
 						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
 						main_model.normalize_weights();
 					}
@@ -343,7 +343,7 @@ void Solution::run(int iter, int index_thetha)
 				{
 					out << "accept alpha" << endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior.thetha[i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
+					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.mean, main_model.std);//change-make generator private for abcde
 					main_model.new_posterior.error[i] = error;
 					main_model.normalize_weights();
 				}
@@ -368,7 +368,7 @@ void Solution::run(int iter, int index_thetha)
 					{
 						out << "accept alpha" << endl;
 						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
-						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior.thetha[j * main_model.count_iter / (size)+i], main_model.curr_thetha, main_model.count_opt_param, main_model.mean, main_model.std);//change-make generator private for abcde
+						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter,  main_model.mean, main_model.std);//change-make generator private for abcde
 						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
 						main_model.normalize_weights();
 					}
