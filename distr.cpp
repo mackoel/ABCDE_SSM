@@ -80,17 +80,23 @@ Distribution::Thetha Distribution::get_prev_iter_with_weight(const Distribution:
 	return posterior.thetha[0];
 }
 
-double Distribution::get_new_weight(Distribution::Thetha& prev_thetha, Distribution::Thetha& curr_thetha, const int count_opt_param, vector<double>& mean, vector<double>& std)
+double Distribution::get_new_weight(Distribution::Posterior& posterior, Distribution::Thetha& curr_thetha, const int count_opt_param, const int count_iter, vector<double>& mean, vector<double>& std)
 {
-	double curr_kernel_func = 1.0, prev_kernel_func = 1.0;
-	for (int j = 0; j < count_opt_param; j++)
+	double phi = 1.0, sum = 0.0, norm;
+	for (int i = 0; i < count_opt_param; i++)
 	{
-		curr_kernel_func *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], mean[j], std[j]);
-		prev_kernel_func *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, prev_thetha.param[j], mean[j], std[j]);
+		phi *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], mean[i], std[i]);
 	}
-	if (prev_kernel_func == 0.0)
-		return 1.0;
-	return curr_kernel_func / prev_kernel_func;//add kernel_function_with_error
+	for (int i = 0; i < count_iter; i++)
+	{
+		norm = 1.0;
+		for (int j = 0; j < count_opt_param; j++)
+		{
+			norm *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], 0.0, curr_thetha.param[j]);
+		}
+		sum += posterior.w[i] * norm;
+	}
+	return phi / sum;
 }
 
 Distribution::Thetha Distribution::generate_vector_param(Distribution::TYPE_DISTR mode, int count_opt_param, vector<double>& mean, vector<double>& std)//
