@@ -28,6 +28,14 @@ class Distribution
 		{
 			vector<double> param;
 			double delta;
+		/*	friend class boost::serialization::access;
+
+			template<class Archive>
+			void serialize(Archive& ar, const unsigned int version) {
+				ar& delta;
+				BOOST_SERIALIZATION_NVP(param);
+			}*/
+
 		}Thetha;
 
 		typedef struct
@@ -36,6 +44,16 @@ class Distribution
 			double * w;
 			double * error;
 			double delta_one;
+			/*friend class boost::serialization::access;
+
+			template<class Archive>
+			void serialize(Archive& ar, const unsigned int version) {
+				ar& thetha;
+				ar& w;
+				ar& error;
+				ar& delta_one;
+
+			}*/
 		}Posterior;
 
 
@@ -53,12 +71,9 @@ class Distribution
 		
 		Thetha get_prev_iter_with_weight(const Posterior& posterior, const int size);
 
-		double get_new_weight(Distribution::Thetha& prev_thetha, Distribution::Thetha& curr_thetha, const int count_opt_param, vector<double>& mean, vector<double>& std);
+		double get_new_weight(Posterior& posterior, Thetha& curr_thetha, const int count_opt_param, const int count_iter, vector<double>& mean, vector<double>& std);
 
 		Thetha generate_vector_param(TYPE_DISTR mode, int count_opt_param, vector<double>& mean, vector<double>& std);
-
-		double erf(double x);
-
 
 		double kernelNormalSampleWithParam(double x, double mean, double var);
 		
