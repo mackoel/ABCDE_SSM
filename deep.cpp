@@ -38,9 +38,6 @@ double Deep::run()
 	string output;
 	std::vector<std::string> data;
 	std::string line;
-	ofstream out("log_deep_work.txt", std::ios::app);
-	out << "deep start" << endl;
-	out << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file << endl;
 	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file, bp::std_out > is);
 	while (c.running() && std::getline(is, line) && !line.empty())
 	{
@@ -48,13 +45,10 @@ double Deep::run()
 		data.push_back(line);
 	}
 	c.wait();
-	out << "deep end" << endl;
         output = data.back();
-	cout << output << endl;
 	res = parse_result(output);
-	out.close();
 	std::remove(tmp_config_file.c_str());
-		return res;
+	return res;
 }
 
 double Deep::parse_result(string output)
@@ -74,12 +68,12 @@ double Deep::parse_result(string output)
 	}
 }
 
+
 void Deep::act_with_config_file()
 {
 	create_tmp_deep_ini_file();
-	ofstream out("log_tmp_name_file.txt", std::ios::app);
-	out << "name tmp file is: " << tmp_config_file << endl;
-	out.close();
+	//ofstream out("log_tmp_name_file.txt", std::ios::app);
+	//out.close();
 }
 void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file, vector<int>& dtype)
 {
@@ -89,7 +83,8 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	int index = 0;
 	int add_int;
 	string delimeter;
-	int count_phyl_param = name_opt_param.size() - 4;
+	int count_phyl_param = name_opt_param.size() - not_phyl_param_size;
+	
 	for (auto& key : keys)
 	{
 		str = propTree.get<std::string>(key);
@@ -101,6 +96,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 				delimeter = d;
 				break;
 			}
+
 		}
 		boost::split(split_str, str, boost::is_any_of(delimeter));
 		if (dtype[index] == 0)
@@ -120,6 +116,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 			    output += delimeter;
 		}
 		propTree.put(key, output);
+
 	}
 	string command = propTree.get<std::string>("default_model.command");
 	boost::split(split_str, command, boost::is_any_of(" "));
@@ -317,6 +314,8 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	}
 }
 	
+
+
 void Deep::create_tmp_deep_ini_file()
 {
 	const char* name = tmpnam(NULL);
