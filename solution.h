@@ -6,7 +6,7 @@ class Solution
 private:
 	Abcde main_model;
 	Deep aux_model;
-	double error, alpha;
+	double alpha;
 	Parametrs param;
 	Run_manager manager;
 public:
