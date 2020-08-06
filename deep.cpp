@@ -5,12 +5,33 @@ Deep::Deep() {}
 Deep::Deep(const string& param)
 {
 	config_file = param;
-	boost::property_tree::ini_parser::read_ini(config_file, propTree);
+	act_with_config_file();
+}
+
+Deep& Deep::operator=(const Deep& other)
+{
+	propTree = other.propTree;
+	config_file = other.config_file;
+	keys = other.keys;
+	index_in_keys = other.index_in_keys;
+	config_file = other.config_file;
+	deep_exe = other.deep_exe;
+	index_score = other.index_score;
+	count_snp = other.count_snp;
+	ini_mode = other.ini_mode;
+	index_n = other.index_n;
+	index_l = other.index_l;
+	return *this;
+}
+
+
+
+void Deep::act_with_config_file()
+{
+    boost::property_tree::ini_parser::read_ini(config_file, propTree);
 	deep_exe = propTree.get<std::string>("abcde.name_exe_file");
 	index_score = stoi(propTree.get<std::string>("abcde.index_score"));
 	count_snp = stoi(propTree.get<std::string>("abcde.count_snp"));
-	count_weather_const = stoi(propTree.get<std::string>("abcde.count_weather_const"));
-	count_added_param = stoi(propTree.get<std::string>("abcde.count_added_param"));
 	index_n = stoi(propTree.get<std::string>("abcde.index_n"));
 	index_l = stoi(propTree.get<std::string>("abcde.index_l"));
 	ini_mode = stoi(propTree.get<std::string>("abcde.ini_mode"));
@@ -29,7 +50,6 @@ Deep::Deep(const string& param)
 	}
 }
 
-
 double Deep::run()
 {
 	double res;
@@ -38,6 +58,7 @@ double Deep::run()
 	string output;
 	std::vector<std::string> data;
 	std::string line;
+	cout << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file << endl;
 	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file, bp::std_out > is);
 	while (c.running() && std::getline(is, line) && !line.empty())
 	{
@@ -45,7 +66,8 @@ double Deep::run()
 		data.push_back(line);
 	}
 	c.wait();
-        output = data.back();
+	
+    output = data.back();
 	res = parse_result(output);
 	std::remove(tmp_config_file.c_str());
 	return res;
@@ -58,6 +80,7 @@ double Deep::parse_result(string output)
 	int i = 1;
 	boost::sregex_iterator it(output.begin(), output.end(), re);
 	boost::sregex_iterator end;
+
 	for (; it != end; ++it)
 	{
 		if(i == index_score)
@@ -66,16 +89,11 @@ double Deep::parse_result(string output)
 		}
 		i++;
 	}
+
+	
 }
 
-
-void Deep::act_with_config_file()
-{
-	create_tmp_deep_ini_file();
-	//ofstream out("log_tmp_name_file.txt", std::ios::app);
-	//out.close();
-}
-void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_file, string param_exe_file, vector<int>& dtype)
+void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& dtype)
 {
 	vector<string> delimeters = {" ", ";", "," };
 	string str;
@@ -223,7 +241,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 	}
 	else
 	{
-		count_param = n * l + n + n * count_snp + count_weather_const + count_added_param + count_phyl_param;//5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
+		count_param = n * l + n + n * count_snp +  count_phyl_param;//now weather const and added const in phyl_param - 5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
 		string str_parts;
 		for (auto& p : name_opt_param)
 		{
@@ -231,8 +249,8 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 				str_parts += p + to_string(n * l) + ";";
 			else if (p == "beta;")
 				str_parts += p + to_string(n + n * count_snp) + ";";
-			else if (p == "concs;")
-				str_parts += p + to_string(count_weather_const) + ";";
+			else if (p == "MB;")
+				str_parts += p + "1;";
 			else
 				str_parts += p + "1;";
 
@@ -248,46 +266,63 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 
 		string parms_str;
 		for (int i = 0; i < n * l; i++)
-			parms_str += "200;";
+			parms_str += default_opt_params[0];
+			
+		for (int i = 0; i < n + n * count_snp; i++)
+			parms_str += default_opt_params[1];
 
-		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
-			parms_str += "5;";
+		for (int i = 0; i < count_phyl_param; i++)
+			parms_str += default_opt_params[2 + i];
 		
 		propTree.put("default_model.parms", parms_str);
 
 		string dparms_str;
 		for (int i = 0; i < n * l; i++)
-			dparms_str += "200;";
-		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param-2; i++)
-			dparms_str += "5.5;";
-		dparms_str += "5;";
-		dparms_str += "5.5;";
+			dparms_str += default_opt_dparams[0];
+
+		for (int i = 0; i < n + n * count_snp; i++)
+			dparms_str += default_opt_dparams[1];
+
+		for (int i = 0; i < count_phyl_param; i++)
+			dparms_str += default_opt_dparams[2 + i];
 		propTree.put("default_model.dparms", dparms_str);
 
 		string lbounds_str;
 		for (int i = 0; i < n * l; i++)
-			lbounds_str += "0;";
-		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
-			lbounds_str += "-10;";
-		
+			lbounds_str += default_lbounds_opt_params[0];
+
+		for (int i = 0; i < n + n * count_snp; i++)
+			lbounds_str += default_lbounds_opt_params[1];
+
+		for (int i = 0; i < count_phyl_param; i++)
+			lbounds_str += default_lbounds_opt_params[2 + i];
 
 		propTree.put("default_model.lbound", lbounds_str);
 
 
+
 		string hbounds_str;
 		for (int i = 0; i < n * l; i++)
-			hbounds_str += "1924;";
-		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param; i++)
-			hbounds_str += "50;";
+			hbounds_str += default_hbounds_opt_params[0];
+
+		for (int i = 0; i < n + n * count_snp; i++)
+			hbounds_str += default_hbounds_opt_params[1];
+
+		for (int i = 0; i < count_phyl_param-2; i++)
+			hbounds_str += default_hbounds_opt_params[2 + i];
 
 		propTree.put("default_model.hbound", hbounds_str);
 
 
 		string tweak_str;
-		for (int i = 0; i < count_param - count_phyl_param; i++)
-			tweak_str += "1;";
+		for (int i = 0; i < n * l; i++)
+			tweak_str += default_tweak_opt_params[0];
+
+		for (int i = 0; i < n + n * count_snp; i++)
+			tweak_str += default_tweak_opt_params[1];
+
 		for (int i = 0; i < count_phyl_param; i++)
-			tweak_str += "0;";
+			tweak_str += default_tweak_opt_params[2 + i];
 
 		propTree.put("default_model.tweak", tweak_str);
 
@@ -304,18 +339,14 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, string exe_fil
 		string partype_str;
 		for (int i = 0; i < n * l; i++)
 			partype_str += "1;";
-		for (int i = 0; i < n + n * count_snp + count_weather_const + count_added_param + count_phyl_param-2; i++)
+		for (int i = 0; i < n + n * count_snp  + count_phyl_param; i++)
 			partype_str += "0;";
-		partype_str += "1;";
-		partype_str += "0;";
 		propTree.put("default_model.partype", partype_str);
 
 		write_ini(tmp_config_file, propTree);
 	}
 }
 	
-
-
 void Deep::create_tmp_deep_ini_file()
 {
 	const char* name = tmpnam(NULL);
