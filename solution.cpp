@@ -5,7 +5,6 @@ Solution::Solution(const Abcde& _main_model, const Deep& _aux_model, const Param
 	main_model = _main_model;
 	aux_model = _aux_model;
 	param = _param;
-	error = 0.0;
 	alpha = 0.0;
 }
 inline void Solution::copy_posterior(Distribution::Posterior& posterior_to, Distribution::Posterior& posterior_from)
@@ -78,8 +77,8 @@ void Solution::run_init(int iter, int index_thetha)
 		{
 			double error;
 			main_model.curr_thetha = all_thetha[i];
-			aux_model.act_with_config_file();
-			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+			aux_model.create_tmp_deep_ini_file();
+			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype);
 			error = aux_model.run();
 			main_model.posterior.thetha[i] = main_model.curr_thetha;
 			main_model.posterior.w[i] = 1.0 / main_model.count_iter;
@@ -129,8 +128,8 @@ void Solution::run_init(int iter, int index_thetha)
 		{
 			Distribution::Thetha curr_thetha;
 			curr_thetha.param = param[i];
-			aux_model.act_with_config_file();
-			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+			aux_model.create_tmp_deep_ini_file();
+			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype);
 			error.push_back(aux_model.run());
 		}
 		MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
@@ -187,8 +186,8 @@ void Solution::run_approximate(int iter, int index_thetha)
 				main_model.curr_thetha = all_thetha[i];
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
-				aux_model.act_with_config_file();
-				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+				aux_model.create_tmp_deep_ini_file();
+				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype);
 				error = aux_model.run();
 				out << "error ready" << error << endl;
 
@@ -240,7 +239,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 			print_log(t);
 		}
-		if (main_model.mode == Parametrs::DELTA_MODE::MEAN)
+		if (main_model.mode_delta == Parametrs::DELTA_MODE::MEAN)
 		{
 			double s = 0.0;
 			for (int i = 0; i < main_model.count_iter; i++)
@@ -250,7 +249,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 			main_model.posterior.delta_one = s / main_model.count_iter;
 			main_model.new_posterior.delta_one = main_model.posterior.delta_one;
 		}
-		else if (main_model.mode == Parametrs::DELTA_MODE::MED)
+		else if (main_model.mode_delta == Parametrs::DELTA_MODE::MED)
 		{
 
 		}
@@ -273,8 +272,8 @@ void Solution::run_approximate(int iter, int index_thetha)
 			{
 				Distribution::Thetha curr_thetha;
 				curr_thetha.param = param[i];
-				aux_model.act_with_config_file();
-				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+				aux_model.create_tmp_deep_ini_file();
+				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype);
 				error.push_back(aux_model.run());
 			}
 			MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
@@ -330,8 +329,8 @@ void Solution::run(int iter, int index_thetha)
 			{
 				double error;
 				main_model.curr_thetha = all_thetha[i];
-				aux_model.act_with_config_file();
-				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+				aux_model.create_tmp_deep_ini_file();
+				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype);
 				error = aux_model.run();
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
@@ -399,8 +398,8 @@ void Solution::run(int iter, int index_thetha)
 			{
 				Distribution::Thetha curr_thetha;
 				curr_thetha.param = param[i];
-				aux_model.act_with_config_file();
-				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.optimizing_model_exe, main_model.param_opt_model, main_model.dtype);
+				aux_model.create_tmp_deep_ini_file();
+				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype);
 				error.push_back(aux_model.run());
 			}
 			MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
