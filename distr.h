@@ -1,18 +1,6 @@
 #pragma once
 #include "pch.h"
 
-#define MEAN_ERROR 3
-#define LOFFSET log((double)RAND_MAX)
-#define MU_N 5
-#define MU_L 12
-#define MU_LAMBDA 5
-#define SIGMA 0.5
-#define SSM 7
-//parametrs for mutation
-#define MU_N_MUT 0.75
-#define MU_L_MUT 2.25
-#define MU_LAMBDA_MUT 0.75
-
 class Distribution
 {
     public:
@@ -28,14 +16,6 @@ class Distribution
 		{
 			vector<double> param;
 			double delta;
-		/*	friend class boost::serialization::access;
-
-			template<class Archive>
-			void serialize(Archive& ar, const unsigned int version) {
-				ar& delta;
-				BOOST_SERIALIZATION_NVP(param);
-			}*/
-
 		}Thetha;
 
 		typedef struct
@@ -44,16 +24,6 @@ class Distribution
 			double * w;
 			double * error;
 			double delta_one;
-			/*friend class boost::serialization::access;
-
-			template<class Archive>
-			void serialize(Archive& ar, const unsigned int version) {
-				ar& thetha;
-				ar& w;
-				ar& error;
-				ar& delta_one;
-
-			}*/
 		}Posterior;
 
 
