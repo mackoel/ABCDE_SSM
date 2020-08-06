@@ -17,8 +17,6 @@ public:
 	double get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double error, int i);
 	string config_file;
 	string deep_exe;
-	string optimizing_model_exe;
-	string param_opt_model;
 	Distribution::Posterior posterior;
 	Distribution::Posterior new_posterior;
 	Distribution::Thetha curr_thetha;
@@ -29,7 +27,7 @@ public:
 	int start_iter;
 	int count_thread;
 	double* error;
-	int mode;//0 - mean, 1 - med
+	int mode_delta;//0 - mean, 1 - med
 	int count_opt_param;
 	vector<double> mean, std;
 	vector<int> dtype;
