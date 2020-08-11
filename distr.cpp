@@ -123,3 +123,18 @@ double Distribution::kernel_function(Distribution::TYPE_DISTR mode, double x, co
 	}
 	return kernelNormalSampleWithParam(x, param1, param2);
 }
+
+int Distribution::generate_seed()
+{
+	vector<string> components;
+	string output;
+	for (int i = 0; i < 3; i++)
+	{
+		components.push_back(to_string(static_cast<int>(prior_distribution(Distribution::TYPE_DISTR::RANDOM, 1.0, 1000.0))));
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		output += components[i];
+	}
+	return stoi(output);
+}
