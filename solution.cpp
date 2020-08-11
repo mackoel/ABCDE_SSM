@@ -78,7 +78,7 @@ void Solution::run_init(int iter, int index_thetha)
 			double error;
 			main_model.curr_thetha = all_thetha[i];
 			aux_model.create_tmp_deep_ini_file();
-			int seed = static_cast<int>(main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1000.0));
+			int seed = main_model.generator.generate_seed();
 
 			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype, seed);
 			error = aux_model.run();
@@ -130,7 +130,7 @@ void Solution::run_init(int iter, int index_thetha)
 		{
 			Distribution::Thetha curr_thetha;
 			curr_thetha.param = param[i];
-			int seed = static_cast<int>(main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1000.0));
+			int seed = main_model.generator.generate_seed();
 			aux_model.create_tmp_deep_ini_file();
 			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype, seed);
 			error.push_back(aux_model.run());
@@ -189,7 +189,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 				main_model.curr_thetha = all_thetha[i];
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
-				int seed = static_cast<int>(main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1000.0));
+				int seed = main_model.generator.generate_seed();
 
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype, seed);
@@ -277,7 +277,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 			{
 				Distribution::Thetha curr_thetha;
 				curr_thetha.param = param[i];
-				int seed = static_cast<int>(main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1000.0));
+				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype, seed);
 				error.push_back(aux_model.run());
@@ -335,7 +335,7 @@ void Solution::run(int iter, int index_thetha)
 			{
 				double error;
 				main_model.curr_thetha = all_thetha[i];
-				int seed = static_cast<int>(main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1000.0));
+				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype, seed);
 				error = aux_model.run();
@@ -405,7 +405,7 @@ void Solution::run(int iter, int index_thetha)
 			{
 				Distribution::Thetha curr_thetha;
 				curr_thetha.param = param[i];
-				int seed = static_cast<int>(main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1000.0));
+				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype, seed);
 				error.push_back(aux_model.run());
