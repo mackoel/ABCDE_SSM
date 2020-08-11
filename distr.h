@@ -48,4 +48,6 @@ class Distribution
 		double kernelNormalSampleWithParam(double x, double mean, double var);
 		
 		double kernel_function(TYPE_DISTR mode, double x, const double param1 = 0.0, const double param2 = 0.0);
+
+		int generate_seed();
 };
