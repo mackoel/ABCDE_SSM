@@ -31,7 +31,7 @@ public:
 
 	double parse_result(string output);
 
-	void prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& dtype);
+	void prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& dtype, int seed);
 
 	void create_tmp_deep_ini_file();
 
@@ -39,12 +39,11 @@ public:
 	string tmp_config_file;
 	string deep_exe;
 	double error;
-	int index_score;
 	vector<string> keys;// = 46; 46; 32
 	vector<int> index_in_keys;// = 5; 7; 5
 	int count_snp;
 	const int count_weather_const = 5;
 	const int count_added_param = 1;
 	int ini_mode;
-	int index_n, index_l;
+	int index_n, index_l, index_score, index_seed;
 };
