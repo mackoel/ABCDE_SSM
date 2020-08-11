@@ -34,6 +34,8 @@ void Deep::act_with_config_file()
 	count_snp = stoi(propTree.get<std::string>("abcde.count_snp"));
 	index_n = stoi(propTree.get<std::string>("abcde.index_n"));
 	index_l = stoi(propTree.get<std::string>("abcde.index_l"));
+	index_seed = stoi(propTree.get<std::string>("abcde.index_seed"));
+
 	ini_mode = stoi(propTree.get<std::string>("abcde.ini_mode"));
 	vector<string> str_keys, str_index;
 	string s = propTree.get<std::string>("abcde.keys");
@@ -93,7 +95,7 @@ double Deep::parse_result(string output)
 	
 }
 
-void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& dtype)
+void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& dtype, int seed)
 {
 	vector<string> delimeters = {" ", ";", "," };
 	string str;
@@ -114,7 +116,6 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 				delimeter = d;
 				break;
 			}
-
 		}
 		boost::split(split_str, str, boost::is_any_of(delimeter));
 		if (dtype[index] == 0)
@@ -134,8 +135,22 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 			    output += delimeter;
 		}
 		propTree.put(key, output);
-
 	}
+	//add seed
+	string key = "default_model.command";
+	str = propTree.get<std::string>(key);
+	boost::split(split_str, str, boost::is_any_of(' '));
+	split_str[index_seed] = to_string(seed);		
+	string output;
+	for (int i = 0; i < split_str.size(); i++)
+	{
+		output += split_str[i];
+		if (i < split_str.size() - 1)
+			output += ' ';
+	}
+	propTree.put(key, output);
+	//end add seed
+
 	string command = propTree.get<std::string>("default_model.command");
 	boost::split(split_str, command, boost::is_any_of(" "));
 	int n = stoi(split_str[index_n]);
@@ -241,7 +256,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 	}
 	else
 	{
-		count_param = n * l + n + n * count_snp +  count_phyl_param;//now weather const and added const in phyl_param - 5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
+		count_param = n * l + n + n * count_snp +  count_phyl_param;//now weather const and added const in phyl_param - 5 - constant(srad, tmax, tmin, rain, dl) and all cbd and MB - (bmin, cbd)
 		string str_parts;
 		for (auto& p : name_opt_param)
 		{
