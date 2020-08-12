@@ -21,6 +21,14 @@ Deep& Deep::operator=(const Deep& other)
 	ini_mode = other.ini_mode;
 	index_n = other.index_n;
 	index_l = other.index_l;
+	index_seed = other.index_seed;
+
+	name_deep_opt_params = other.name_deep_opt_params;
+	default_deep_opt_params = other.default_deep_opt_params;
+	default_deep_opt_dparams = other.default_deep_opt_dparams;
+	default_tweak_deep_opt_params = other.default_tweak_deep_opt_params;
+	default_lbounds_deep_opt_params = other.default_lbounds_deep_opt_params;
+	default_hbounds_deep_opt_params = other.default_hbounds_deep_opt_params;
 	return *this;
 }
 
@@ -35,21 +43,59 @@ void Deep::act_with_config_file()
 	index_n = stoi(propTree.get<std::string>("abcde.index_n"));
 	index_l = stoi(propTree.get<std::string>("abcde.index_l"));
 	index_seed = stoi(propTree.get<std::string>("abcde.index_seed"));
-
 	ini_mode = stoi(propTree.get<std::string>("abcde.ini_mode"));
-	vector<string> str_keys, str_index;
+
+
+	vector<string> str_list;//, str_index;
 	string s = propTree.get<std::string>("abcde.keys");
-	boost::split(str_keys, s, boost::is_any_of(";"));
-	for (int i = 0; i < str_keys.size(); i++)
+	boost::split(str_list, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_list.size(); i++)
 	{
-		keys.push_back(str_keys[i]);
+		keys.push_back(str_list[i]);
 	}
 	s = propTree.get<std::string>("abcde.index_in_keys");
-	boost::split(str_index, s, boost::is_any_of(";"));
-	for (int i = 0; i < str_index.size(); i++)
+	boost::split(str_list, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_list.size(); i++)
 	{
-		index_in_keys.push_back(stoi(str_index[i]));
+		index_in_keys.push_back(stoi(str_list[i]));
 	}
+	s = propTree.get<std::string>("abcde.name_deep_opt_params");
+	boost::split(str_list, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_list.size(); i++)
+	{
+		name_deep_opt_params.push_back(str_list[i]+";");
+	}
+	s = propTree.get<std::string>("abcde.default_deep_opt_params");
+	boost::split(str_list, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_list.size(); i++)
+	{
+		default_deep_opt_params.push_back(str_list[i] + ";");
+	}
+	s = propTree.get<std::string>("abcde.default_deep_opt_dparams");
+	boost::split(str_list, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_list.size(); i++)
+	{
+		default_deep_opt_dparams.push_back(str_list[i] + ";");
+	}
+	s = propTree.get<std::string>("abcde.default_tweak_deep_opt_params");
+	boost::split(str_list, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_list.size(); i++)
+	{
+		default_tweak_deep_opt_params.push_back(str_list[i] + ";");
+	}
+	s = propTree.get<std::string>("abcde.default_lbounds_deep_opt_params");
+	boost::split(str_list, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_list.size(); i++)
+	{
+		default_lbounds_deep_opt_params.push_back(str_list[i] + ";");
+	}
+	s = propTree.get<std::string>("abcde.default_hbounds_deep_opt_params");
+	boost::split(str_list, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_list.size(); i++)
+	{
+		default_hbounds_deep_opt_params.push_back(str_list[i] + ";");
+	}
+
 }
 
 double Deep::run()
@@ -103,7 +149,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 	int index = 0;
 	int add_int;
 	string delimeter;
-	int count_phyl_param = name_opt_param.size() - not_phyl_param_size;
+	int count_phyl_param = name_deep_opt_params.size() - not_phyl_param_size;
 	
 	for (auto& key : keys)
 	{
@@ -139,11 +185,13 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 	//add seed
 	string key = "default_model.command";
 	str = propTree.get<std::string>(key);
+	split_str.clear();
 	boost::split(split_str, str, boost::is_any_of(" "));
 	split_str[index_seed] = to_string(seed);		
 	string output;
 	for (int i = 0; i < split_str.size(); i++)
 	{
+		cout << split_str[i] << endl;
 		output += split_str[i];
 		if (i < split_str.size() - 1)
 			output += ' ';
@@ -155,9 +203,11 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 	boost::split(split_str, command, boost::is_any_of(" "));
 	int n = stoi(split_str[index_n]);
 	int l = stoi(split_str[index_l]);	
-	int count_param = n * l + n + n * count_snp + count_weather_const + count_added_param;//5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
+	int count_param;
 	if (ini_mode == INI_MODE::FUNC_AND_CROPS)
-	{
+	{	
+	/*	int count_param = n * l + n + n * count_snp + 5 +2;//5 - constant(srad, tmax, tmin, rain, dl), 2 - (bmin, cbd)
+
 		string str_parts = "x;" + to_string(count_param) + ";";
 		propTree.put("default_model.parts", str_parts);
 
@@ -252,13 +302,15 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 			partype_str += "0;";
 		propTree.put("default_model.partype", partype_str);
 
-		write_ini(tmp_config_file, propTree);
+		write_ini(tmp_config_file, propTree);*/
 	}
 	else
 	{
+		
+
 		count_param = n * l + n + n * count_snp +  count_phyl_param;//now weather const and added const in phyl_param - 5 - constant(srad, tmax, tmin, rain, dl) and all cbd and MB - (bmin, cbd)
 		string str_parts;
-		for (auto& p : name_opt_param)
+		for (auto& p : name_deep_opt_params)
 		{
 			if (p == "x;")
 				str_parts += p + to_string(n * l) + ";";
@@ -281,36 +333,37 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 
 		string parms_str;
 		for (int i = 0; i < n * l; i++)
-			parms_str += default_opt_params[0];
-			
+			parms_str += default_deep_opt_params[0];
+
 		for (int i = 0; i < n + n * count_snp; i++)
-			parms_str += default_opt_params[1];
+			parms_str += default_deep_opt_params[1];
 
 		for (int i = 0; i < count_phyl_param; i++)
-			parms_str += default_opt_params[2 + i];
-		
+			parms_str += default_deep_opt_params[2 + i];
+
 		propTree.put("default_model.parms", parms_str);
 
 		string dparms_str;
 		for (int i = 0; i < n * l; i++)
-			dparms_str += default_opt_dparams[0];
+			dparms_str += default_deep_opt_dparams[0];
 
 		for (int i = 0; i < n + n * count_snp; i++)
-			dparms_str += default_opt_dparams[1];
+			dparms_str += default_deep_opt_dparams[1];
 
 		for (int i = 0; i < count_phyl_param; i++)
-			dparms_str += default_opt_dparams[2 + i];
+			dparms_str += default_deep_opt_dparams[2 + i];
+
 		propTree.put("default_model.dparms", dparms_str);
 
 		string lbounds_str;
 		for (int i = 0; i < n * l; i++)
-			lbounds_str += default_lbounds_opt_params[0];
+			lbounds_str += default_lbounds_deep_opt_params[0];
 
 		for (int i = 0; i < n + n * count_snp; i++)
-			lbounds_str += default_lbounds_opt_params[1];
+			lbounds_str += default_lbounds_deep_opt_params[1];
 
 		for (int i = 0; i < count_phyl_param; i++)
-			lbounds_str += default_lbounds_opt_params[2 + i];
+			lbounds_str += default_lbounds_deep_opt_params[2 + i];
 
 		propTree.put("default_model.lbound", lbounds_str);
 
@@ -318,26 +371,26 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 
 		string hbounds_str;
 		for (int i = 0; i < n * l; i++)
-			hbounds_str += default_hbounds_opt_params[0];
+			hbounds_str += default_hbounds_deep_opt_params[0];
 
 		for (int i = 0; i < n + n * count_snp; i++)
-			hbounds_str += default_hbounds_opt_params[1];
+			hbounds_str += default_hbounds_deep_opt_params[1];
 
 		for (int i = 0; i < count_phyl_param-2; i++)
-			hbounds_str += default_hbounds_opt_params[2 + i];
+			hbounds_str += default_hbounds_deep_opt_params[2 + i];
 
 		propTree.put("default_model.hbound", hbounds_str);
 
 
 		string tweak_str;
 		for (int i = 0; i < n * l; i++)
-			tweak_str += default_tweak_opt_params[0];
+			tweak_str += default_tweak_deep_opt_params[0];
 
 		for (int i = 0; i < n + n * count_snp; i++)
-			tweak_str += default_tweak_opt_params[1];
+			tweak_str += default_tweak_deep_opt_params[1];
 
 		for (int i = 0; i < count_phyl_param; i++)
-			tweak_str += default_tweak_opt_params[2 + i];
+			tweak_str += default_tweak_deep_opt_params[2 + i];
 
 		propTree.put("default_model.tweak", tweak_str);
 
