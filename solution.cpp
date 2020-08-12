@@ -79,7 +79,6 @@ void Solution::run_init(int iter, int index_thetha)
 			main_model.curr_thetha = all_thetha[i];
 			aux_model.create_tmp_deep_ini_file();
 			int seed = main_model.generator.generate_seed();
-
 			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype, seed);
 			error = aux_model.run();
 			main_model.posterior.thetha[i] = main_model.curr_thetha;
