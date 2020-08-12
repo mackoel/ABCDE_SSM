@@ -139,7 +139,7 @@ void Deep::prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& d
 	//add seed
 	string key = "default_model.command";
 	str = propTree.get<std::string>(key);
-	boost::split(split_str, str, boost::is_any_of(' '));
+	boost::split(split_str, str, boost::is_any_of(" "));
 	split_str[index_seed] = to_string(seed);		
 	string output;
 	for (int i = 0; i < split_str.size(); i++)
