@@ -58,15 +58,15 @@ double Deep::run()
 	string output;
 	std::vector<std::string> data;
 	std::string line;
-	cout << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file << endl;
-	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file, bp::std_out > is);
+	cout << bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file + " -d" << endl;
+	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file + " -d", bp::std_out > is);
 	while (c.running() && std::getline(is, line) && !line.empty())
 	{
 		cout << line << endl;
 		data.push_back(line);
 	}
 	c.wait();
-    output = data.back();
+        output = data.back();
 	res = parse_result(output);
 	std::remove(tmp_config_file.c_str());
 	return res;
