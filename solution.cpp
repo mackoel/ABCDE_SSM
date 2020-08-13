@@ -146,7 +146,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 	int tag = 0;
 	int rank;
 #endif
-	int size;
+	int size = 1;
 #ifdef MPIZE
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -295,7 +295,7 @@ void Solution::run(int iter, int index_thetha)
 	int tag = 0;
 	int rank;
 #endif
-	int size;
+	int size = 1;
 #ifdef MPIZE
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
