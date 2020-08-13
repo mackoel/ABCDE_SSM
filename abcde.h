@@ -11,7 +11,6 @@ public:
 	void act_with_config_file();
 	Distribution::Thetha mutation(int index);
 	Distribution::Thetha bounds(Distribution::Thetha _curr_thetha);
-
 	Distribution::Thetha crossover(int index);
 	void normalize_weights();
 	double get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double error, int i);
@@ -27,7 +26,6 @@ public:
 	int start_iter;
 	int count_thread;
 	double* error;
-	int mode_delta;//0 - mean, 1 - med
 	int count_opt_param;
 	vector<double> mean, std;
 	vector<int> dtype;
