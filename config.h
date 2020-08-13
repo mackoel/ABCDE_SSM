@@ -9,11 +9,6 @@ public:
 		INIT,
 		AUX
 	};
-	enum DELTA_MODE
-	{
-		MEAN = 0,
-		MED
-	};
 	string config_file;
 
 	void train(const po::variables_map& vm)
@@ -22,6 +17,8 @@ public:
 		{
 			cout << "--help - show help " << endl;
 			cout << "--input [file_name] - config_file" << endl;
+			cout << "--test [0 - med, 1 - mean] - mode for get delta after training" << endl;
+
 		}
 		if (vm.count("input")) {
 			config_file = vm["input"].as<std::string>();
@@ -38,6 +35,7 @@ public:
 		po::options_description solution_desc("Solution options");
 		solution_desc.add_options()
 			("input,I", po::value<std::string>(), "Input config file")
+			
 			;
 		po::variables_map vm;
 		po::parsed_options parsed = po::command_line_parser(ac, av).options(desc).allow_unregistered().run();
