@@ -32,7 +32,6 @@ void  Abcde::act_with_config_file()
 	t = stoi(pt.get<std::string>("abcde.t"));
 	count_iter = stoi(pt.get<std::string>("abcde.count_iter"));
 	start_iter = stoi(pt.get<std::string>("abcde.start_iter"));
-	mode_delta = stoi(pt.get<std::string>("abcde.mode_delta"));
 	count_opt_param = stoi(pt.get<std::string>("abcde.count_opt_param"));
 	vector<string> str_mean, str_std, str_hbound, str_lbound, str_dtype;
 	string s = pt.get<std::string>("abcde.mean");
@@ -83,7 +82,6 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 	Distribution::Thetha thetha;
 	double alpha, beta, delta;
 	double q;
-
 	for (int i = 0; i < count_opt_param; i++)
 	{
 		alpha = (hbound[i] + lbound[i]) / 2.0;
@@ -134,8 +132,6 @@ double Abcde::get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_t
 	{
 		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, _curr_thetha.delta);
 	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, posterior.thetha[i].delta);
-		cout << psi_curr << endl;
-		cout << psi_prev << endl;
 	}
 	else
 	{
