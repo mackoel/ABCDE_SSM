@@ -57,11 +57,11 @@ void Solution::run_init(int iter, int index_thetha)
 		vector<Distribution::Thetha> all_thetha;
 		for (int j = 0; j < size; j++)
 		{
-			vector<vector<double>> param;
+			vector<vector<double>> _param;
 			for (int i = 0; i < main_model.count_iter / size; i++)
 			{
 				main_model.curr_thetha = main_model.bounds(main_model.generator.generate_vector_param(Distribution::NORM_WITH_PARAM, main_model.count_opt_param, main_model.mean, main_model.std));
-				param.push_back(main_model.curr_thetha.param);
+				_param.push_back(main_model.curr_thetha.param);
 				all_thetha.push_back(main_model.curr_thetha);
 			}
 #ifdef MPIZE
@@ -69,7 +69,7 @@ void Solution::run_init(int iter, int index_thetha)
 			{
 				cout << "send for process = " << rank << endl;
 				for (int k = 0; k < main_model.count_iter / size; k++)
-					MPI_Send(&param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
+					MPI_Send(&_param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
 			}
 #endif
 		}
@@ -120,15 +120,15 @@ void Solution::run_init(int iter, int index_thetha)
 	}
 	else
 	{
-		vector<vector<double>> param(main_model.count_iter / size, vector<double>(main_model.count_opt_param));
+		vector<vector<double>> _param(main_model.count_iter / size, vector<double>(main_model.count_opt_param));
 		vector<double>error;
 		cout << "recv = " << rank << endl;
 		for (int k = 0; k < main_model.count_iter / size; k++)
-			MPI_Recv(&param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
+			MPI_Recv(&_param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
 		for (int i = 0; i < main_model.count_iter / size; i++)
 		{
 			Distribution::Thetha curr_thetha;
-			curr_thetha.param = param[i];
+			curr_thetha.param = _param[i];
 			int seed = main_model.generator.generate_seed();
 			aux_model.create_tmp_deep_ini_file();
 			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype, seed);
@@ -162,7 +162,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 			vector<Distribution::Thetha> all_thetha;
 			for (int j = 0; j < size; j++)
 			{
-				vector<vector<double>> param;
+				vector<vector<double>> _param;
 
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
@@ -171,14 +171,14 @@ void Solution::run_approximate(int iter, int index_thetha)
 						main_model.curr_thetha = main_model.mutation(i);
 					else
 						main_model.curr_thetha = main_model.crossover(i);
-					param.push_back(main_model.curr_thetha.param);
+					_param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
 				}
 #ifdef MPIZE
 				if (j != 0)
 				{
 					for (int k = 0; k < main_model.count_iter / size; k++)
-						MPI_Send(&param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
+						MPI_Send(&_param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
 				}
 #endif
 			}
@@ -243,8 +243,8 @@ void Solution::run_approximate(int iter, int index_thetha)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 			print_log(t);
 		}
-		if (main_model.mode_delta == Parametrs::DELTA_MODE::MEAN)
-		{
+	//	if (main_model.mode_delta == Parametrs::DELTA_MODE::MEAN)
+	//	{
 			double s = 0.0;
 			for (int i = 0; i < main_model.count_iter; i++)
 			{
@@ -252,11 +252,11 @@ void Solution::run_approximate(int iter, int index_thetha)
 			}
 			main_model.posterior.delta_one = s / main_model.count_iter;
 			main_model.new_posterior.delta_one = main_model.posterior.delta_one;
-		}
-		else if (main_model.mode_delta == Parametrs::DELTA_MODE::MED)
-		{
+	//	}
+	//	else if (main_model.mode_delta == Parametrs::DELTA_MODE::MED)
+	//	{
 
-		}
+	//	}
 		manager.state = Run_manager::STATE::RUN;
 		manager.change_state(manager.state);
 		manager.change_delta(main_model.posterior.delta_one);
@@ -268,14 +268,14 @@ void Solution::run_approximate(int iter, int index_thetha)
 	{
 		for (int t = iter; t < main_model.start_iter; t++)
 		{
-			vector<vector<double>> param(main_model.count_iter / size, vector<double>(main_model.count_opt_param));
+			vector<vector<double>> _param(main_model.count_iter / size, vector<double>(main_model.count_opt_param));
 			vector<double> error;
 			for (int k = 0; k < main_model.count_iter / size; k++)
-				MPI_Recv(&param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
+				MPI_Recv(&_param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
 			for (int i = 0; i < main_model.count_iter / (size); i++)
 			{
 				Distribution::Thetha curr_thetha;
-				curr_thetha.param = param[i];
+				curr_thetha.param = _param[i];
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype, seed);
@@ -310,7 +310,7 @@ void Solution::run(int iter, int index_thetha)
 			vector<Distribution::Thetha> all_thetha;
 			for (int j = 0; j < size; j++)
 			{
-				vector<vector<double>> param;
+				vector<vector<double>> _param;
 
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
@@ -319,14 +319,14 @@ void Solution::run(int iter, int index_thetha)
 						main_model.curr_thetha = main_model.mutation(i);
 					else
 						main_model.curr_thetha = main_model.crossover(i);
-					param.push_back(main_model.curr_thetha.param);
+					_param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
 				}
 #ifdef MPIZE
 				if (j != 0)
 				{
 					for (int k = 0; k < main_model.count_iter / size; k++)
-						MPI_Send(&param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
+						MPI_Send(&_param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
 				}
 #endif
 			}
@@ -396,14 +396,14 @@ void Solution::run(int iter, int index_thetha)
 	{
 		for (int t = iter; t < main_model.t; t++)
 		{
-			vector<vector<double>> param(main_model.count_iter / size, vector<double>(main_model.count_opt_param));
+			vector<vector<double>> _param(main_model.count_iter / size, vector<double>(main_model.count_opt_param));
 			vector<double> error;
 			for (int k = 0; k < main_model.count_iter / size; k++)
-				MPI_Recv(&param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
+				MPI_Recv(&_param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
 			for (int i = 0; i < main_model.count_iter / (size); i++)
 			{
 				Distribution::Thetha curr_thetha;
-				curr_thetha.param = param[i];
+				curr_thetha.param = _param[i];
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype, seed);
