@@ -53,21 +53,19 @@ void Solution::run_init(int iter, int index_thetha)
 #endif
 		ofstream out("log_iteration.txt", std::ios::app);
 		out << "INIT" << endl;
-
 		vector<Distribution::Thetha> all_thetha;
 		for (int j = 0; j < size; j++)
 		{
 			vector<vector<double>> _param;
 			for (int i = 0; i < main_model.count_iter / size; i++)
 			{
-				main_model.curr_thetha = main_model.bounds(main_model.generator.generate_vector_param(Distribution::NORM_WITH_PARAM, main_model.count_opt_param, main_model.mean, main_model.std));
+				main_model.curr_thetha = main_model.generator.generate_vector_param(Distribution::NORM_WITH_PARAM, main_model.count_opt_param, main_model.mean, main_model.std);
 				_param.push_back(main_model.curr_thetha.param);
 				all_thetha.push_back(main_model.curr_thetha);
 			}
 #ifdef MPIZE
 			if (j != 0)
 			{
-				cout << "send for process = " << rank << endl;
 				for (int k = 0; k < main_model.count_iter / size; k++)
 					MPI_Send(&_param[k].front(), main_model.count_opt_param, MPI_DOUBLE, j, tag, MPI_COMM_WORLD);
 			}
@@ -79,7 +77,7 @@ void Solution::run_init(int iter, int index_thetha)
 			main_model.curr_thetha = all_thetha[i];
 			aux_model.create_tmp_deep_ini_file();
 			int seed = main_model.generator.generate_seed();
-			aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype, seed);
+			aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
 			error = aux_model.run();
 			main_model.posterior.thetha[i] = main_model.curr_thetha;
 			main_model.posterior.w[i] = 1.0 / main_model.count_iter;
@@ -88,7 +86,6 @@ void Solution::run_init(int iter, int index_thetha)
 			main_model.new_posterior.w[i] = 1.0 / main_model.count_iter;
 			main_model.new_posterior.error[i] = error;
 			main_model.posterior.thetha[i].delta = main_model.new_posterior.thetha[i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
-			manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, i, main_model.count_opt_param);
 		}
 #ifdef MPIZE
 		for (int j = 1; j < size; j++)
@@ -110,7 +107,7 @@ void Solution::run_init(int iter, int index_thetha)
 #endif
 		for (int i = 0; i < main_model.count_iter; i++)
 			manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, i, main_model.count_opt_param);
-
+		
 		print_log(-1);
 		manager.state = Run_manager::STATE::RUN_APPROXIMATE;
 		manager.change_state(manager.state);
@@ -122,16 +119,16 @@ void Solution::run_init(int iter, int index_thetha)
 	{
 		vector<vector<double>> _param(main_model.count_iter / size, vector<double>(main_model.count_opt_param));
 		vector<double>error;
-		cout << "recv = " << rank << endl;
 		for (int k = 0; k < main_model.count_iter / size; k++)
 			MPI_Recv(&_param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
 		for (int i = 0; i < main_model.count_iter / size; i++)
 		{
 			Distribution::Thetha curr_thetha;
 			curr_thetha.param = _param[i];
+			curr_thetha.delta = 0.0;//not use - just so that there is no error in bounds
 			int seed = main_model.generator.generate_seed();
 			aux_model.create_tmp_deep_ini_file();
-			aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype, seed);
+			aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
 			error.push_back(aux_model.run());
 		}
 		MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
@@ -159,6 +156,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 		out << "RUN_APPROXIMATE" << endl;
 		for (int t = iter; t < main_model.start_iter; t++)
 		{
+			main_model.set_sample_dist_param();
 			vector<Distribution::Thetha> all_thetha;
 			for (int j = 0; j < size; j++)
 			{
@@ -167,10 +165,24 @@ void Solution::run_approximate(int iter, int index_thetha)
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
 					double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
+					out << "choice = " <<choice << endl;
+
 					if (choice < 0.05)
+					{
+						out << "mutation" << endl;
+
 						main_model.curr_thetha = main_model.mutation(i);
+						out << "mutation end" << endl;
+
+					}
 					else
+					{
+						out << "crossover" << endl;
+
 						main_model.curr_thetha = main_model.crossover(i);
+						out << "crossover end" << endl;
+
+					}
 					_param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
 				}
@@ -191,11 +203,10 @@ void Solution::run_approximate(int iter, int index_thetha)
 				int seed = main_model.generator.generate_seed();
 
 				aux_model.create_tmp_deep_ini_file();
-				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype, seed);
+				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
 				error = aux_model.run();
 				out << "error ready" << error << endl;
-
-				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i);
+				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.bounds(main_model.curr_thetha), error, i);
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
 				out << "alpha = " << alpha << endl;
@@ -204,7 +215,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 				{
 					out << "accept alpha"<< endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.mean, main_model.std);//change-make generator private for abcde
+					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.sample_mean, main_model.sample_std);//change-make generator private for abcde
 					main_model.new_posterior.error[i] = error;
 					main_model.normalize_weights();
 				}
@@ -229,7 +240,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 					{
 						out << "accept alpha" << endl;
 						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
-						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.mean, main_model.std);//change-make generator private for abcde
+						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.sample_mean, main_model.sample_std);//change-make generator private for abcde
 						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
 						main_model.normalize_weights();
 					}
@@ -245,13 +256,13 @@ void Solution::run_approximate(int iter, int index_thetha)
 		}
 	//	if (main_model.mode_delta == Parametrs::DELTA_MODE::MEAN)
 	//	{
-			double s = 0.0;
-			for (int i = 0; i < main_model.count_iter; i++)
-			{
-				s += main_model.posterior.thetha[i].delta;
-			}
-			main_model.posterior.delta_one = s / main_model.count_iter;
-			main_model.new_posterior.delta_one = main_model.posterior.delta_one;
+		double s = 0.0;
+		for (int i = 0; i < main_model.count_iter; i++)
+		{
+			s += main_model.posterior.thetha[i].delta;
+		}
+		main_model.posterior.delta_one = s / main_model.count_iter;
+		main_model.new_posterior.delta_one = main_model.posterior.delta_one;
 	//	}
 	//	else if (main_model.mode_delta == Parametrs::DELTA_MODE::MED)
 	//	{
@@ -276,9 +287,10 @@ void Solution::run_approximate(int iter, int index_thetha)
 			{
 				Distribution::Thetha curr_thetha;
 				curr_thetha.param = _param[i];
+				curr_thetha.delta = 0.0;
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
-				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype, seed);
+				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
 				error.push_back(aux_model.run());
 			}
 			MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
@@ -307,6 +319,7 @@ void Solution::run(int iter, int index_thetha)
 		cout << "RUN" << endl;
 		for (int t = iter; t < main_model.t; t++)
 		{
+			main_model.set_sample_dist_param();
 			vector<Distribution::Thetha> all_thetha;
 			for (int j = 0; j < size; j++)
 			{
@@ -336,11 +349,11 @@ void Solution::run(int iter, int index_thetha)
 				main_model.curr_thetha = all_thetha[i];
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
-				aux_model.prepare_tmp_deep_ini_file(main_model.curr_thetha, main_model.dtype, seed);
+				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
 				error = aux_model.run();
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
-				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i);
+				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.bounds(main_model.curr_thetha), error, i);
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
 				out << "alpha = " << alpha << endl;
@@ -348,7 +361,7 @@ void Solution::run(int iter, int index_thetha)
 				{
 					out << "accept alpha" << endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.mean, main_model.std);//change-make generator private for abcde
+					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.sample_mean, main_model.sample_std);//change-make generator private for abcde
 					main_model.new_posterior.error[i] = error;
 					main_model.normalize_weights();
 				}
@@ -373,7 +386,7 @@ void Solution::run(int iter, int index_thetha)
 					{
 						out << "accept alpha" << endl;
 						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
-						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter,  main_model.mean, main_model.std);//change-make generator private for abcde
+						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter,  main_model.sample_mean, main_model.sample_std);//change-make generator private for abcde
 						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
 						main_model.normalize_weights();
 					}
@@ -404,9 +417,10 @@ void Solution::run(int iter, int index_thetha)
 			{
 				Distribution::Thetha curr_thetha;
 				curr_thetha.param = _param[i];
+				curr_thetha.delta = 0.0;
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
-				aux_model.prepare_tmp_deep_ini_file(curr_thetha, main_model.dtype, seed);
+				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
 				error.push_back(aux_model.run());
 			}
 			MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
