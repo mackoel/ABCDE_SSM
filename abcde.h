@@ -13,6 +13,7 @@ public:
 	Distribution::Thetha bounds(Distribution::Thetha _curr_thetha);
 	Distribution::Thetha crossover(int index);
 	void normalize_weights();
+	void set_sample_dist_param();
 	double get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double error, int i);
 	string config_file;
 	string deep_exe;
@@ -20,7 +21,6 @@ public:
 	Distribution::Posterior new_posterior;
 	Distribution::Thetha curr_thetha;
 	Distribution generator;
-	double eps;
 	int t;
 	int count_iter;
 	int start_iter;
@@ -28,6 +28,7 @@ public:
 	double* error;
 	int count_opt_param;
 	vector<double> mean, std;
+	vector<double> sample_mean, sample_std;
 	vector<int> dtype;
 	vector<double> lbound, hbound;
 
