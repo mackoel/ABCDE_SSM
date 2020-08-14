@@ -48,7 +48,6 @@ void  Abcde::act_with_config_file()
 	boost::property_tree::ini_parser::read_ini(config_file, pt);
 	count_thread = stoi(pt.get<std::string>("abcde.count_thread"));
 	deep_exe = pt.get<std::string>("abcde.name_exe_file");
-	//eps = stod(pt.get<std::string>("abcde.eps"));
 	t = stoi(pt.get<std::string>("abcde.t"));
 	count_iter = stoi(pt.get<std::string>("abcde.count_iter"));
 	start_iter = stoi(pt.get<std::string>("abcde.start_iter"));
@@ -99,22 +98,23 @@ Distribution::Thetha Abcde::mutation(int index)
 	_curr_thetha.delta = _curr_thetha.delta + generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
 	return _curr_thetha;
 }
+
+double Abcde::get_bounds(double x, double _lbound, double _hbound)
+{
+	double alpha, beta, q;
+	alpha = (_hbound + _lbound) / 2.0;
+	beta = (_hbound - _lbound) / 2.0;
+	q = alpha + beta * sin(x);
+	return q;
+}
+
 Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 {
 	Distribution::Thetha thetha;
-	double alpha, beta, delta;
-	double q;
 	for (int i = 0; i < count_opt_param; i++)
 	{
-		alpha = (hbound[i] + lbound[i]) / 2.0;
-		beta = (hbound[i] - lbound[i]) / 2.0;
-		q = alpha + beta * sin(_curr_thetha.param[i]);
-		thetha.param.push_back(q);
+		thetha.param.push_back(get_bounds(_curr_thetha.param[i], lbound[i], hbound[i]));
 	}
-	alpha = (0.0 + 5.0) / 2.0;
-	beta = (5.0 - 0.0) / 2.0;
-	q = alpha + beta * sin(_curr_thetha.delta);
-	thetha.delta = q;
 	return thetha;
 }
 Distribution::Thetha Abcde::crossover(int index)
@@ -149,16 +149,15 @@ Distribution::Thetha Abcde::crossover(int index)
 double Abcde::get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double _error, int i)
 {
 	double psi_curr, psi_prev;
-
 	if (_mode == Parametrs::MODE::INIT)
 	{
-		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, _curr_thetha.delta);
-	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, posterior.thetha[i].delta);
+		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, get_bounds(_curr_thetha.delta, 0.0, 5.0));
+	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, get_bounds(posterior.thetha[i].delta, 0.0, 5.0));
 	}
 	else
 	{
-        psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, posterior.delta_one);
-	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, posterior.delta_one);
+        psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, get_bounds(posterior.delta_one, 0.0, 5.0));
+	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, get_bounds(posterior.delta_one, 0.0, 5.0));
 	}
 	double curr_kernel_func = 1.0, prev_kernel_func = 1.0;
 	for (int j = 0; j < count_opt_param; j++)
