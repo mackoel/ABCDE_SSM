@@ -125,7 +125,6 @@ void Solution::run_init(int iter, int index_thetha)
 		{
 			Distribution::Thetha curr_thetha;
 			curr_thetha.param = _param[i];
-			curr_thetha.delta = 0.0;//not use - just so that there is no error in bounds
 			int seed = main_model.generator.generate_seed();
 			aux_model.create_tmp_deep_ini_file();
 			aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
@@ -287,7 +286,6 @@ void Solution::run_approximate(int iter, int index_thetha)
 			{
 				Distribution::Thetha curr_thetha;
 				curr_thetha.param = _param[i];
-				curr_thetha.delta = 0.0;
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
@@ -417,7 +415,6 @@ void Solution::run(int iter, int index_thetha)
 			{
 				Distribution::Thetha curr_thetha;
 				curr_thetha.param = _param[i];
-				curr_thetha.delta = 0.0;
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
