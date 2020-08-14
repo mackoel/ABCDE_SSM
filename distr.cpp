@@ -50,9 +50,10 @@ double Distribution::getNormalSampleWithParam(double mean, double var)
 
 double Distribution::getLrand(double l)
 {
-	double u;
-	u = rand() / (RAND_MAX + 1.0);
-	return -log(1 - u) / l;
+	std::random_device mch;
+	std::default_random_engine gen(mch());
+	std::exponential_distribution<double> d(l);
+	return d(gen);
 }
 
 
