@@ -10,6 +10,7 @@ public:
 	void init_posterior();
 	void act_with_config_file();
 	Distribution::Thetha mutation(int index);
+	double get_bounds(double x, double _lbound, double _hbound);
 	Distribution::Thetha bounds(Distribution::Thetha _curr_thetha);
 	Distribution::Thetha crossover(int index);
 	void normalize_weights();
