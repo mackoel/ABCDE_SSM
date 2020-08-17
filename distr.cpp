@@ -9,7 +9,7 @@ double Distribution::prior_distribution(Distribution::TYPE_DISTR mode, const dou
 	}
 	if (mode == NORM_WITH_PARAM)
 	{
-		return getNormalSampleWithParam(param1, param2);//double x = normalRandom()*sigma+Mi;
+		return getNormalSampleWithParam(param1, param2);
 	}
 	if (mode == EXPON)
 	{
@@ -54,60 +54,6 @@ double Distribution::getLrand(double l)
 	std::default_random_engine gen(mch());
 	std::exponential_distribution<double> d(l);
 	return d(gen);
-}
-
-
-double Distribution::max_weight(double* w, const int size)
-{
-	double max_w = -1.0;
-	for (int i = 0; i < size; i++)
-	{
-		if (w[i] > max_w)
-			max_w = w[i];
-	}
-	return max_w;
-}
-
-Distribution::Thetha Distribution::get_prev_iter_with_weight(const Distribution::Posterior& posterior, const int size)
-{
-	double prop;
-	for (int i = 0; i < size; i++)
-	{
-		prop = prior_distribution(RANDOM, 0.0, max_weight(posterior.w, size));
-		if (posterior.w[i] >= prop) {
-			return posterior.thetha[i];
-		}
-	}
-	return posterior.thetha[0];
-}
-
-double Distribution::get_new_weight(Distribution::Posterior& posterior, Distribution::Thetha& curr_thetha, const int count_opt_param, const int count_iter, vector<double>& mean, vector<double>& std)
-{
-	double phi = 1.0, sum = 0.0, norm;
-	for (int i = 0; i < count_opt_param; i++)
-	{
-		phi *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], mean[i], std[i]);
-	}
-	for (int i = 0; i < count_iter; i++)
-	{
-		norm = 1.0;
-		for (int j = 0; j < count_opt_param; j++)
-		{
-			norm *= kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], 0.0, curr_thetha.param[j]);
-		}
-		sum += posterior.w[i] * norm;
-	}
-	return phi / sum;
-}
-
-Distribution::Thetha Distribution::generate_vector_param(Distribution::TYPE_DISTR mode, int count_opt_param, vector<double>& mean, vector<double>& std)//
-{
-	Thetha thetha;
-	for (int i = 0; i < count_opt_param; i++)
-	{
-    	thetha.param.push_back(prior_distribution(mode, mean[i], std[i]));
-	}
-	return thetha;
 }
 
 double Distribution::kernelNormalSampleWithParam(double x, double mean, double var)
