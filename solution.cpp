@@ -59,7 +59,7 @@ void Solution::run_init(int iter, int index_thetha)
 			vector<vector<double>> _param;
 			for (int i = 0; i < main_model.count_iter / size; i++)
 			{
-				main_model.curr_thetha = main_model.generator.generate_vector_param(Distribution::NORM_WITH_PARAM, main_model.count_opt_param, main_model.mean, main_model.std);
+				main_model.curr_thetha = main_model.generate_vector_param(Distribution::NORM_WITH_PARAM);
 				_param.push_back(main_model.curr_thetha.param);
 				all_thetha.push_back(main_model.curr_thetha);
 			}
@@ -107,7 +107,7 @@ void Solution::run_init(int iter, int index_thetha)
 #endif
 		for (int i = 0; i < main_model.count_iter; i++)
 			manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, i, main_model.count_opt_param);
-		
+		main_model.set_sample_dist_param();
 		print_log(-1);
 		manager.state = Run_manager::STATE::RUN_APPROXIMATE;
 		manager.change_state(manager.state);
@@ -155,7 +155,6 @@ void Solution::run_approximate(int iter, int index_thetha)
 		out << "RUN_APPROXIMATE" << endl;
 		for (int t = iter; t < main_model.start_iter; t++)
 		{
-			main_model.set_sample_dist_param();
 			vector<Distribution::Thetha> all_thetha;
 			for (int j = 0; j < size; j++)
 			{
@@ -209,14 +208,11 @@ void Solution::run_approximate(int iter, int index_thetha)
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
 				out << "alpha = " << alpha << endl;
-
 				if (main_model.accept_alpha(alpha))
 				{
 					out << "accept alpha"<< endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.sample_mean, main_model.sample_std);//change-make generator private for abcde
 					main_model.new_posterior.error[i] = error;
-					main_model.normalize_weights();
 				}
 				else
 					out << "not accept" << endl;
@@ -239,22 +235,19 @@ void Solution::run_approximate(int iter, int index_thetha)
 					{
 						out << "accept alpha" << endl;
 						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
-						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.sample_mean, main_model.sample_std);//change-make generator private for abcde
 						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
-						main_model.normalize_weights();
 					}
 					else
 						out << "not accept" << endl;
 				}
 			}
 #endif
+			main_model.update_posterior();
 			copy_posterior(main_model.posterior, main_model.new_posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
 			print_log(t);
 		}
-	//	if (main_model.mode_delta == Parametrs::DELTA_MODE::MEAN)
-	//	{
 		double s = 0.0;
 		for (int i = 0; i < main_model.count_iter; i++)
 		{
@@ -262,11 +255,6 @@ void Solution::run_approximate(int iter, int index_thetha)
 		}
 		main_model.posterior.delta_one = s / main_model.count_iter;
 		main_model.new_posterior.delta_one = main_model.posterior.delta_one;
-	//	}
-	//	else if (main_model.mode_delta == Parametrs::DELTA_MODE::MED)
-	//	{
-
-	//	}
 		manager.state = Run_manager::STATE::RUN;
 		manager.change_state(manager.state);
 		manager.change_delta(main_model.posterior.delta_one);
@@ -314,10 +302,9 @@ void Solution::run(int iter, int index_thetha)
 	{
 #endif
 		ofstream out("log_iteration.txt", std::ios::app);
-		cout << "RUN" << endl;
+		out << "RUN" << endl;
 		for (int t = iter; t < main_model.t; t++)
 		{
-			main_model.set_sample_dist_param();
 			vector<Distribution::Thetha> all_thetha;
 			for (int j = 0; j < size; j++)
 			{
@@ -359,9 +346,7 @@ void Solution::run(int iter, int index_thetha)
 				{
 					out << "accept alpha" << endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.w[i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter, main_model.sample_mean, main_model.sample_std);//change-make generator private for abcde
 					main_model.new_posterior.error[i] = error;
-					main_model.normalize_weights();
 				}
 				else
 					out << "not accept" << endl;
@@ -384,15 +369,14 @@ void Solution::run(int iter, int index_thetha)
 					{
 						out << "accept alpha" << endl;
 						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
-						main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = main_model.generator.get_new_weight(main_model.posterior, main_model.curr_thetha, main_model.count_opt_param, main_model.count_iter,  main_model.sample_mean, main_model.sample_std);//change-make generator private for abcde
 						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
-						main_model.normalize_weights();
 					}
 					else
 						out << "not accept" << endl;
 				}
 			}
 #endif
+			main_model.update_posterior();
 			copy_posterior(main_model.posterior, main_model.new_posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
