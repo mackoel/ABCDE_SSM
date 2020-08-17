@@ -10,11 +10,16 @@ public:
 	void init_posterior();
 	void act_with_config_file();
 	Distribution::Thetha mutation(int index);
-	double get_bounds(double x, double _lbound, double _hbound);
+	double set_bounds(double x, double _lbound, double _hbound);
 	Distribution::Thetha bounds(Distribution::Thetha _curr_thetha);
 	Distribution::Thetha crossover(int index);
+	double max_weight(double* w);
+	Distribution::Thetha get_prev_iter_with_weight();
+	double set_new_weight();
+	Distribution::Thetha generate_vector_param(Distribution::TYPE_DISTR mode);
 	void normalize_weights();
 	void set_sample_dist_param();
+	void update_posterior();
 	double get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double error, int i);
 	string config_file;
 	string deep_exe;
@@ -32,5 +37,4 @@ public:
 	vector<double> sample_mean, sample_std;
 	vector<int> dtype;
 	vector<double> lbound, hbound;
-
 };
