@@ -42,6 +42,72 @@ void Abcde::set_sample_dist_param()
 		sample_std[i] = sum / (count_iter - 1);
 	}
 }
+
+
+double Abcde::max_weight(double* w)
+{
+	double max_w = -1.0;
+	for (int i = 0; i < count_iter; i++)
+	{
+		if (w[i] > max_w)
+			max_w = w[i];
+	}
+	return max_w;
+}
+
+Distribution::Thetha Abcde::get_prev_iter_with_weight()
+{
+	double prop;
+	for (int i = 0; i < count_iter; i++)
+	{
+		prop = generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, max_weight(posterior.w));
+		if (posterior.w[i] >= prop) {
+			return posterior.thetha[i];
+		}
+	}
+	return posterior.thetha[0];
+}
+
+double Abcde::set_new_weight()
+{
+	double phi = 1.0, sum = 0.0, norm;
+	for (int i = 0; i < count_opt_param; i++)
+	{
+		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], mean[i], std[i]);
+	}
+	for (int i = 0; i < count_iter; i++)
+	{
+		norm = 1.0;
+		for (int j = 0; j < count_opt_param; j++)
+		{
+			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], sample_mean[j], sample_std[j]);
+		}
+		sum += posterior.w[i] * norm;
+	}
+	return phi / sum;
+}
+
+Distribution::Thetha Abcde::generate_vector_param(Distribution::TYPE_DISTR mode)
+{
+	Distribution::Thetha thetha;
+	for (int i = 0; i < count_opt_param; i++)
+	{
+		thetha.param.push_back(generator.prior_distribution(mode, mean[i], std[i]));
+	}
+	return thetha;
+}
+
+
+void Abcde::update_posterior()
+{
+	set_sample_dist_param();//previous iter posterior
+	for(int i = 0; i < count_iter; i++)
+	{
+		curr_thetha = new_posterior.thetha[i];
+		new_posterior.w[i] = set_new_weight();
+	}
+	normalize_weights();
+}
 void  Abcde::act_with_config_file()
 {
 	boost::property_tree::ptree pt;
@@ -99,7 +165,7 @@ Distribution::Thetha Abcde::mutation(int index)
 	return _curr_thetha;
 }
 
-double Abcde::get_bounds(double x, double _lbound, double _hbound)
+double Abcde::set_bounds(double x, double _lbound, double _hbound)
 {
 	double alpha, beta, q;
 	alpha = (_hbound + _lbound) / 2.0;
@@ -113,7 +179,7 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 	Distribution::Thetha thetha;
 	for (int i = 0; i < count_opt_param; i++)
 	{
-		thetha.param.push_back(get_bounds(_curr_thetha.param[i], lbound[i], hbound[i]));
+		thetha.param.push_back(set_bounds(_curr_thetha.param[i], lbound[i], hbound[i]));
 	}
 	return thetha;
 }
@@ -133,7 +199,7 @@ Distribution::Thetha Abcde::crossover(int index)
 	{
 		n_index = rand() % (count_iter - 1);
 	}
-	thetha_b = generator.get_prev_iter_with_weight(posterior, count_iter);
+	thetha_b = get_prev_iter_with_weight();
 	thetha_m = posterior.thetha[m_index];
 	thetha_n = posterior.thetha[n_index];
 
@@ -151,13 +217,13 @@ double Abcde::get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_t
 	double psi_curr, psi_prev;
 	if (_mode == Parametrs::MODE::INIT)
 	{
-		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, get_bounds(_curr_thetha.delta, 0.0, 5.0));
-	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, get_bounds(posterior.thetha[i].delta, 0.0, 5.0));
+		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(_curr_thetha.delta, 0.0, 5.0));
+	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, set_bounds(posterior.thetha[i].delta, 0.0, 5.0));
 	}
 	else
 	{
-        psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, get_bounds(posterior.delta_one, 0.0, 5.0));
-	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, get_bounds(posterior.delta_one, 0.0, 5.0));
+        psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(posterior.delta_one, 0.0, 5.0));
+	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, set_bounds(posterior.delta_one, 0.0, 5.0));
 	}
 	double curr_kernel_func = 1.0, prev_kernel_func = 1.0;
 	for (int j = 0; j < count_opt_param; j++)
