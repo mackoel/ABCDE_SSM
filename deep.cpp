@@ -50,11 +50,11 @@ void Deep::act_with_config_file()
 	}
 }
 
-double Deep::run()
+double Deep::run(int process, int iter)
 {
 	double res;
 	namespace bp = boost::process;
-	bp::ipstream is; 
+	bp::ipstream is;
 	string output;
 	std::vector<std::string> data;
 	std::string line;
@@ -62,11 +62,11 @@ double Deep::run()
 	bp::child c(bp::search_path(deep_exe).string() + " --default-name=" + tmp_config_file + " -d", bp::std_out > is);
 	while (c.running() && std::getline(is, line) && !line.empty())
 	{
-		cout << line << endl;
+		cout << line + " process = " << process << " element iter = " << iter << endl;
 		data.push_back(line);
 	}
 	c.wait();
-        output = data.back();
+	output = data.back();
 	res = parse_result(output);
 	std::remove(tmp_config_file.c_str());
 	return res;
