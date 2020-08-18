@@ -78,7 +78,7 @@ void Solution::run_init(int iter, int index_thetha)
 			aux_model.create_tmp_deep_ini_file();
 			int seed = main_model.generator.generate_seed();
 			aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
-			error = aux_model.run();
+			error = aux_model.run(0, i);
 			if (i == 0)
 				main_model.norm_error = error;
 			main_model.posterior.thetha[i] = main_model.curr_thetha;
@@ -130,7 +130,7 @@ void Solution::run_init(int iter, int index_thetha)
 			int seed = main_model.generator.generate_seed();
 			aux_model.create_tmp_deep_ini_file();
 			aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
-			error.push_back(aux_model.run());
+			error.push_back(aux_model.run(rank, i));
 		}
 		MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
 		run_approximate(0, 0);
@@ -198,7 +198,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
-				error = aux_model.run();
+				error = aux_model.run(0, i);
 				out << "error ready" << error << endl;
 				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error / main_model.norm_error, i);
 				out << "original alpha = " << alpha << endl;
@@ -273,7 +273,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
-				error.push_back(aux_model.run());
+				error.push_back(aux_model.run(rank, i));
 			}
 			MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
 
@@ -331,7 +331,7 @@ void Solution::run(int iter, int index_thetha)
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
-				error = aux_model.run();
+				error = aux_model.run(0, i);
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
 				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error / main_model.norm_error, i);
@@ -398,7 +398,7 @@ void Solution::run(int iter, int index_thetha)
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
-				error.push_back(aux_model.run());
+				error.push_back(aux_model.run(rank, i));
 			}
 			MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
 		}
