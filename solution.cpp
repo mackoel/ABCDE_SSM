@@ -357,7 +357,7 @@ void Solution::run(int iter, int index_thetha)
 					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
 					for (int s = 0; s < main_model.count_opt_param; s++)
 						out << main_model.curr_thetha.param[s] << endl;
-					alpha = main_model.get_statistics(Parametrs::MODE::AUX, error[i], j * main_model.count_iter / (size)+i);
+					alpha = main_model.get_statistics(Parametrs::MODE::AUX, error[i] / main_model.norm_error, j * main_model.count_iter / (size)+i);
 					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
 					out << "alpha = " << alpha << endl;
