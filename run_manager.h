@@ -15,11 +15,11 @@ public:
 	int iter;
 	int index_thetha;
 	int state;
-	string log_file = "log_manager_file.ini";
+	string log_file = "C:/project/log_manager_file.ini";
 	pt::ptree propTree;
-	void create_log_file(int _state, Distribution::Posterior& posterior, Distribution::Posterior& new_posterior, int iter, int index_thetha, int count_opt_param);
+	void create_log_file(int _state, Distribution::Posterior& posterior, Distribution::Posterior& new_posterior, double norm_error, int iter, int index_thetha, int count_opt_param);
 
-	void read_log_file(Distribution::Posterior& posterior, Distribution::Posterior& new_posterior, int count_iter, int count_opt_param);
+	void read_log_file(Distribution::Posterior& posterior, Distribution::Posterior& new_posterior, double& norm_error, int count_iter, int count_opt_param);
 
 	void change_state(int _state);
 	
