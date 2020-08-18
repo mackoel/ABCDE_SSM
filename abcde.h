@@ -20,7 +20,7 @@ public:
 	void normalize_weights();
 	void set_sample_dist_param();
 	void update_posterior();
-	double get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double error, int i);
+	double get_statistics(Parametrs::MODE _mode, double error, int i);
 	string config_file;
 	string deep_exe;
 	Distribution::Posterior posterior;
@@ -37,4 +37,5 @@ public:
 	vector<double> sample_mean, sample_std;
 	vector<int> dtype;
 	vector<double> lbound, hbound;
+	double norm_error;
 };
