@@ -19,7 +19,7 @@ inline void Solution::copy_posterior(Distribution::Posterior& posterior_to, Dist
 
 void Solution::run_manager()
 {
-	manager.read_log_file(main_model.posterior, main_model.new_posterior, main_model.count_iter, main_model.count_opt_param);
+	manager.read_log_file(main_model.posterior, main_model.new_posterior, main_model.norm_error, main_model.count_iter, main_model.count_opt_param);
 	switch (manager.state)
 	{
 	case Run_manager::STATE::INIT:
@@ -79,12 +79,14 @@ void Solution::run_init(int iter, int index_thetha)
 			int seed = main_model.generator.generate_seed();
 			aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
 			error = aux_model.run();
+			if (i == 0)
+				main_model.norm_error = error;
 			main_model.posterior.thetha[i] = main_model.curr_thetha;
 			main_model.posterior.w[i] = 1.0 / main_model.count_iter;
-			main_model.posterior.error[i] = error;
+			main_model.posterior.error[i] = error / main_model.norm_error;
 			main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 			main_model.new_posterior.w[i] = 1.0 / main_model.count_iter;
-			main_model.new_posterior.error[i] = error;
+			main_model.new_posterior.error[i] = error / main_model.norm_error;
 			main_model.posterior.thetha[i].delta = main_model.new_posterior.thetha[i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
 		}
 #ifdef MPIZE
@@ -97,16 +99,16 @@ void Solution::run_init(int iter, int index_thetha)
 			{
 				main_model.posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
 				main_model.posterior.w[j * main_model.count_iter / (size)+i] = 1.0 / main_model.count_iter;
-				main_model.posterior.error[j * main_model.count_iter / (size)+i] = error[i];
+				main_model.posterior.error[j * main_model.count_iter / (size)+i] = error[i] / main_model.norm_error;
 				main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
 				main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = 1.0 / main_model.count_iter;
-				main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
+				main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i] / main_model.norm_error;
 				main_model.posterior.thetha[j * main_model.count_iter / (size)+i].delta = main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
 			}
 		}
 #endif
 		for (int i = 0; i < main_model.count_iter; i++)
-			manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, -1, i, main_model.count_opt_param);
+			manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, main_model.norm_error, -1, i, main_model.count_opt_param);
 		main_model.set_sample_dist_param();
 		print_log(-1);
 		manager.state = Run_manager::STATE::RUN_APPROXIMATE;
@@ -164,22 +166,17 @@ void Solution::run_approximate(int iter, int index_thetha)
 				{
 					double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
 					out << "choice = " <<choice << endl;
-
 					if (choice < 0.05)
 					{
 						out << "mutation" << endl;
-
 						main_model.curr_thetha = main_model.mutation(i);
 						out << "mutation end" << endl;
-
 					}
 					else
 					{
 						out << "crossover" << endl;
-
 						main_model.curr_thetha = main_model.crossover(i);
 						out << "crossover end" << endl;
-
 					}
 					_param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
@@ -199,12 +196,11 @@ void Solution::run_approximate(int iter, int index_thetha)
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
 				int seed = main_model.generator.generate_seed();
-
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
 				error = aux_model.run();
 				out << "error ready" << error << endl;
-				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i);
+				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error, i);
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
 				out << "alpha = " << alpha << endl;
@@ -212,7 +208,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 				{
 					out << "accept alpha"<< endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.error[i] = error;
+					main_model.new_posterior.error[i] = error / main_model.norm_error;
 				}
 				else
 					out << "not accept" << endl;
@@ -227,7 +223,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
 					for (int s = 0; s < main_model.count_opt_param; s++)
 						out << main_model.curr_thetha.param[s] << endl;
-					alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error[i], j * main_model.count_iter / (size)+i);
+					alpha = main_model.get_statistics(Parametrs::MODE::INIT, error[i], j * main_model.count_iter / (size)+i);
 					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
 					out << "alpha = " << alpha << endl;
@@ -235,7 +231,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 					{
 						out << "accept alpha" << endl;
 						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
-						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
+						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i] / main_model.norm_error;
 					}
 					else
 						out << "not accept" << endl;
@@ -245,7 +241,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 			main_model.update_posterior();
 			copy_posterior(main_model.posterior, main_model.new_posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
-				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
+				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, main_model.norm_error, t, i, main_model.count_opt_param);
 			print_log(t);
 		}
 		double s = 0.0;
@@ -338,7 +334,7 @@ void Solution::run(int iter, int index_thetha)
 				error = aux_model.run();
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
-				alpha = main_model.get_statistics(Parametrs::MODE::INIT, main_model.curr_thetha, error, i);
+				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error, i);
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
 				out << "alpha = " << alpha << endl;
@@ -346,7 +342,7 @@ void Solution::run(int iter, int index_thetha)
 				{
 					out << "accept alpha" << endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
-					main_model.new_posterior.error[i] = error;
+					main_model.new_posterior.error[i] = error / main_model.norm_error;
 				}
 				else
 					out << "not accept" << endl;
@@ -361,7 +357,7 @@ void Solution::run(int iter, int index_thetha)
 					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
 					for (int s = 0; s < main_model.count_opt_param; s++)
 						out << main_model.curr_thetha.param[s] << endl;
-					alpha = main_model.get_statistics(Parametrs::MODE::AUX, main_model.curr_thetha, error[i], j * main_model.count_iter / (size)+i);
+					alpha = main_model.get_statistics(Parametrs::MODE::AUX, error[i], j * main_model.count_iter / (size)+i);
 					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
 					out << "alpha = " << alpha << endl;
@@ -369,7 +365,7 @@ void Solution::run(int iter, int index_thetha)
 					{
 						out << "accept alpha" << endl;
 						main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = main_model.curr_thetha;
-						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i];
+						main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i] / main_model.norm_error;
 					}
 					else
 						out << "not accept" << endl;
@@ -379,7 +375,7 @@ void Solution::run(int iter, int index_thetha)
 			main_model.update_posterior();
 			copy_posterior(main_model.posterior, main_model.new_posterior);
 			for (int i = 0; i < main_model.count_iter; i++)
-				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, t, i, main_model.count_opt_param);
+				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, main_model.norm_error, t, i, main_model.count_opt_param);
 			print_log(t);
 		}
 		manager.state = Run_manager::STATE::END;
