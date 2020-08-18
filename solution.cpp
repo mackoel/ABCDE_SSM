@@ -200,7 +200,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
 				error = aux_model.run();
 				out << "error ready" << error << endl;
-				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error, i);
+				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error / main_model.norm_error, i);
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
 				out << "alpha = " << alpha << endl;
@@ -223,7 +223,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
 					for (int s = 0; s < main_model.count_opt_param; s++)
 						out << main_model.curr_thetha.param[s] << endl;
-					alpha = main_model.get_statistics(Parametrs::MODE::INIT, error[i], j * main_model.count_iter / (size)+i);
+					alpha = main_model.get_statistics(Parametrs::MODE::INIT, error[i] / main_model.norm_error, j * main_model.count_iter / (size)+i);
 					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
 					out << "alpha = " << alpha << endl;
@@ -334,7 +334,7 @@ void Solution::run(int iter, int index_thetha)
 				error = aux_model.run();
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
-				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error, i);
+				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error / main_model.norm_error, i);
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
 				out << "alpha = " << alpha << endl;
