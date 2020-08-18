@@ -16,11 +16,12 @@ void Run_manager::change_delta(double delta)
 	write_ini(log_file, propTree);
 }
 
-void Run_manager::create_log_file(int _state, Distribution::Posterior& posterior, Distribution::Posterior& new_posterior, int _iter, int _index_thetha, int count_opt_param)
+void Run_manager::create_log_file(int _state, Distribution::Posterior& posterior, Distribution::Posterior& new_posterior, double norm_error, int _iter, int _index_thetha, int count_opt_param)
 {
 	propTree.put("param.state", _state);
 	propTree.put("param.iter", _iter);
 	propTree.put("param.index_thetha", _index_thetha);
+	propTree.put("norm_error", norm_error);
 	string keys;
 	for (int i = 0; i < count_opt_param; i++)
 	{
@@ -62,7 +63,7 @@ void Run_manager::create_log_file(int _state, Distribution::Posterior& posterior
 	write_ini(log_file, propTree);
 }
 //count_iter <---> count_thetha
-void Run_manager::read_log_file(Distribution::Posterior& posterior, Distribution::Posterior& new_posterior, int count_iter, int count_opt_param)
+void Run_manager::read_log_file(Distribution::Posterior& posterior, Distribution::Posterior& new_posterior, double &norm_error, int count_iter, int count_opt_param)
 {
 	ifstream file;
 	file.open(log_file);
@@ -77,6 +78,7 @@ void Run_manager::read_log_file(Distribution::Posterior& posterior, Distribution
 	state = stoi(propTree.get<std::string>("param.state"));
 	iter = stoi(propTree.get<std::string>("param.iter"));
 	index_thetha = stoi(propTree.get<std::string>("param.index_thetha"));
+	norm_error = stod(propTree.get<std::string>("norm_error"));
 	string keys;
 	for (int i = 0; i < count_iter; i++)
 	{
