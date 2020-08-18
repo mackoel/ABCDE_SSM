@@ -11,7 +11,7 @@ public:
 	Deep(const string& param);
 	Deep& operator=(const Deep&);
 	void act_with_config_file();
-	double run();
+	double run(int process, int iter);
 	double parse_result(string output);
 	void prepare_tmp_deep_ini_file(Distribution::Thetha thetha, vector<int>& dtype, int seed);
 	void create_tmp_deep_ini_file();
