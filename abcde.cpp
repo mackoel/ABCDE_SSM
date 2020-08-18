@@ -80,7 +80,9 @@ double Abcde::set_new_weight()
 		norm = 1.0;
 		for (int j = 0; j < count_opt_param; j++)
 		{
-			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], sample_mean[j], sample_std[j]);
+			//norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], curr_thetha.param[j], 2.0 * sample_std[j]);
+			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j], 2.0 * sample_std[j]);
+
 		}
 		sum += posterior.w[i] * norm;
 	}
@@ -212,12 +214,12 @@ Distribution::Thetha Abcde::crossover(int index)
 	return _curr_thetha;
 }
 
-double Abcde::get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_thetha, double _error, int i)
+double Abcde::get_statistics(Parametrs::MODE _mode,  double _error, int i)
 {
 	double psi_curr, psi_prev;
 	if (_mode == Parametrs::MODE::INIT)
 	{
-		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(_curr_thetha.delta, 0.0, 5.0));
+		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(curr_thetha.delta, 0.0, 5.0));
 	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, set_bounds(posterior.thetha[i].delta, 0.0, 5.0));
 	}
 	else
@@ -228,8 +230,10 @@ double Abcde::get_statistics(Parametrs::MODE _mode, Distribution::Thetha _curr_t
 	double curr_kernel_func = 1.0, prev_kernel_func = 1.0;
 	for (int j = 0; j < count_opt_param; j++)
 	{
-		curr_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _curr_thetha.param[j], sample_mean[j], sample_std[j]);
-		prev_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], sample_mean[j], sample_std[j]);
+	//	curr_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], sample_mean[j], sample_std[j]);
+	//	prev_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], sample_mean[j], sample_std[j]);
+		curr_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j], sample_std[j]);
+		prev_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], curr_thetha.param[j], sample_std[j]);
 	}
 	double curr_alpha = curr_kernel_func * psi_curr;
 	double prev_alpha = prev_kernel_func * psi_prev;
