@@ -73,7 +73,7 @@ double Abcde::set_new_weight()
 	double phi = 1.0, sum = 0.0, norm;
 	for (int i = 0; i < count_opt_param; i++)
 	{
-		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], mean[i], std[i]);
+		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], sample_mean[i], sample_std[i]);
 	}
 	for (int i = 0; i < count_iter; i++)
 	{
