@@ -68,6 +68,11 @@ double Deep::run(int iter, int element_number, int seed)
 	c.wait();
 	output = data.back();
 	res = parse_result(output);
+	if(res >= 1.e+12)
+	{
+	    string error_name = "error " + to_string(iter) + " " + to_string(element_number) + " " + to_string(seed) + ".ini";
+	    write_ini(error_name , propTree);
+	}
 	std::remove(tmp_config_file.c_str());
 	return res;
 }
