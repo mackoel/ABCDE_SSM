@@ -75,10 +75,12 @@ void Solution::run_init(int iter, int index_thetha)
 		{
 			double error;
 			main_model.curr_thetha = all_thetha[i];
+			for (int s = 0; s < main_model.count_opt_param; s++)
+				out << main_model.curr_thetha.param[s] << endl;
 			aux_model.create_tmp_deep_ini_file();
 			int seed = main_model.generator.generate_seed();
 			aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
-			error = aux_model.run(-1, i, seed);
+			error = aux_model.run(-1, i);
 			if (i == 0)
 				main_model.norm_error = error;
 			main_model.posterior.thetha[i] = main_model.curr_thetha;
@@ -98,6 +100,8 @@ void Solution::run_init(int iter, int index_thetha)
 			for (int i = 0; i < main_model.count_iter / size; i++)
 			{
 				main_model.posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
+				for (int s = 0; s < main_model.count_opt_param; s++)
+					out << main_model.posterior.thetha[j * main_model.count_iter / (size)+i].param[s] << endl;
 				main_model.posterior.w[j * main_model.count_iter / (size)+i] = 1.0 / main_model.count_iter;
 				main_model.posterior.error[j * main_model.count_iter / (size)+i] = error[i] / main_model.norm_error;
 				main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
@@ -130,7 +134,7 @@ void Solution::run_init(int iter, int index_thetha)
 			int seed = main_model.generator.generate_seed();
 			aux_model.create_tmp_deep_ini_file();
 			aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
-			error.push_back(aux_model.run(-1, rank * main_model.count_iter / (size)+i, seed));
+			error.push_back(aux_model.run(-1, rank * main_model.count_iter / (size)+i));
 		}
 		MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
 		run_approximate(0, 0);
@@ -165,18 +169,18 @@ void Solution::run_approximate(int iter, int index_thetha)
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
 					double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
-					out << "choice = " <<choice << endl;
+				//	out << "choice = " << choice << endl;
 					if (choice < 0.05)
 					{
-						out << "mutation" << endl;
+				//		out << "mutation" << endl;
 						main_model.curr_thetha = main_model.mutation(i);
-						out << "mutation end" << endl;
+				//		out << "mutation end" << endl;
 					}
 					else
 					{
-						out << "crossover" << endl;
+				//		out << "crossover" << endl;
 						main_model.curr_thetha = main_model.crossover(i);
-						out << "crossover end" << endl;
+				//		out << "crossover end" << endl;
 					}
 					_param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
@@ -198,15 +202,15 @@ void Solution::run_approximate(int iter, int index_thetha)
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
-				error = aux_model.run(t, i, seed);
-				out << "error ready" << error << endl;
+				error = aux_model.run(t, i);
+			//	out << "error ready" << error << endl;
 				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error / main_model.norm_error, i);
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
 				out << "alpha = " << alpha << endl;
 				if (main_model.accept_alpha(alpha))
 				{
-					out << "accept alpha"<< endl;
+					out << "accept alpha" << endl;
 					main_model.new_posterior.thetha[i] = main_model.curr_thetha;
 					main_model.new_posterior.error[i] = error / main_model.norm_error;
 				}
@@ -273,7 +277,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
-				error.push_back(aux_model.run(t,  rank * main_model.count_iter / (size)+i, seed));
+				error.push_back(aux_model.run(t, rank * main_model.count_iter / (size)+i));
 			}
 			MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
 
@@ -331,7 +335,7 @@ void Solution::run(int iter, int index_thetha)
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
-				error = aux_model.run(t, i, seed);
+				error = aux_model.run(t, i);
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
 				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error / main_model.norm_error, i);
@@ -398,7 +402,7 @@ void Solution::run(int iter, int index_thetha)
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(curr_thetha), main_model.dtype, seed);
-				error.push_back(aux_model.run(t,  rank * main_model.count_iter / (size)+i, seed));
+				error.push_back(aux_model.run(t, rank * main_model.count_iter / (size)+i));
 			}
 			MPI_Send(&error[0], main_model.count_iter / size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
 		}
