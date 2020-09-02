@@ -75,6 +75,8 @@ void Solution::run_init(int iter, int index_thetha)
 		{
 			double error;
 			main_model.curr_thetha = all_thetha[i];
+			out << "iteration = " << -1 << endl;
+			out << "element number = " << i << endl;
 			for (int s = 0; s < main_model.count_opt_param; s++)
 				out << main_model.curr_thetha.param[s] << endl;
 			aux_model.create_tmp_deep_ini_file();
@@ -90,6 +92,9 @@ void Solution::run_init(int iter, int index_thetha)
 			main_model.new_posterior.w[i] = 1.0 / main_model.count_iter;
 			main_model.new_posterior.error[i] = error / main_model.norm_error;
 			main_model.posterior.thetha[i].delta = main_model.new_posterior.thetha[i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+			out << "delta = " << main_model.posterior.thetha[i].delta << endl;
+			out << "error = " << error / main_model.norm_error << endl;
+			
 		}
 #ifdef MPIZE
 		for (int j = 1; j < size; j++)
@@ -100,6 +105,8 @@ void Solution::run_init(int iter, int index_thetha)
 			for (int i = 0; i < main_model.count_iter / size; i++)
 			{
 				main_model.posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
+				out << "iteration = " << -1 << endl;
+				out << "element number = " << j * main_model.count_iter / (size)+i << endl;
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.posterior.thetha[j * main_model.count_iter / (size)+i].param[s] << endl;
 				main_model.posterior.w[j * main_model.count_iter / (size)+i] = 1.0 / main_model.count_iter;
@@ -108,6 +115,8 @@ void Solution::run_init(int iter, int index_thetha)
 				main_model.new_posterior.w[j * main_model.count_iter / (size)+i] = 1.0 / main_model.count_iter;
 				main_model.new_posterior.error[j * main_model.count_iter / (size)+i] = error[i] / main_model.norm_error;
 				main_model.posterior.thetha[j * main_model.count_iter / (size)+i].delta = main_model.new_posterior.thetha[j * main_model.count_iter / (size)+i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+				out << "delta = " << main_model.posterior.thetha[j * main_model.count_iter / (size)+i].delta << endl;
+				out << "error = " << error[i] / main_model.norm_error << endl;
 			}
 		}
 #endif
@@ -169,18 +178,13 @@ void Solution::run_approximate(int iter, int index_thetha)
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
 					double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
-				//	out << "choice = " << choice << endl;
 					if (choice < 0.05)
 					{
-				//		out << "mutation" << endl;
 						main_model.curr_thetha = main_model.mutation(i);
-				//		out << "mutation end" << endl;
 					}
 					else
 					{
-				//		out << "crossover" << endl;
 						main_model.curr_thetha = main_model.crossover(i);
-				//		out << "crossover end" << endl;
 					}
 					_param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
@@ -197,13 +201,16 @@ void Solution::run_approximate(int iter, int index_thetha)
 			{
 				double error;
 				main_model.curr_thetha = all_thetha[i];
+				out << "iteration = " << t << endl;
+				out << "element number = " << i << endl;
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
+				out << "delta = " << main_model.curr_thetha.delta << endl;
 				int seed = main_model.generator.generate_seed();
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
 				error = aux_model.run(t, i, seed);
-			//	out << "error ready" << error << endl;
+				out << "error = " << error / main_model.norm_error << endl;
 				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error / main_model.norm_error, i);
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
@@ -225,9 +232,13 @@ void Solution::run_approximate(int iter, int index_thetha)
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
 					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
+					out << "iteration = " << t << endl;
+					out << "element number = " << j * main_model.count_iter / (size)+i << endl;
 					for (int s = 0; s < main_model.count_opt_param; s++)
 						out << main_model.curr_thetha.param[s] << endl;
-					alpha = main_model.get_statistics(Parametrs::MODE::INIT, error[i] / main_model.norm_error, j * main_model.count_iter / (size)+i);
+					out << "delta = " << main_model.curr_thetha.delta << endl;
+					alpha = main_model.get_statistics(Parametrs::MODE::INIT, error[i] / main_model.norm_error, j * main_model.count_iter / (size)+i);			
+					out << "error = " << error[i] / main_model.norm_error << endl;
 					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
 					out << "alpha = " << alpha << endl;
@@ -336,9 +347,15 @@ void Solution::run(int iter, int index_thetha)
 				aux_model.create_tmp_deep_ini_file();
 				aux_model.prepare_tmp_deep_ini_file(main_model.bounds(main_model.curr_thetha), main_model.dtype, seed);
 				error = aux_model.run(t, i, seed);
+				out << "iteration = " << t << endl;
+				out << "element number = " << i << endl;
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.curr_thetha.param[s] << endl;
+				out << "delta = " << main_model.curr_thetha.delta << endl;
+
 				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error / main_model.norm_error, i);
+				out << "error = " << error / main_model.norm_error << endl;
+
 				out << "original alpha = " << alpha << endl;
 				alpha = min(1.0, alpha);
 				out << "alpha = " << alpha << endl;
@@ -359,9 +376,15 @@ void Solution::run(int iter, int index_thetha)
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
 					main_model.curr_thetha = all_thetha[j * main_model.count_iter / (size)+i];
+					out << "iteration = " << t << endl;
+					out << "element number = " << j * main_model.count_iter / (size)+i << endl;
 					for (int s = 0; s < main_model.count_opt_param; s++)
 						out << main_model.curr_thetha.param[s] << endl;
+					out << "delta = " << main_model.curr_thetha.delta << endl;
+
 					alpha = main_model.get_statistics(Parametrs::MODE::AUX, error[i] / main_model.norm_error, j * main_model.count_iter / (size)+i);
+					out << "error = " << error[i] / main_model.norm_error << endl;
+
 					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
 					out << "alpha = " << alpha << endl;
