@@ -24,13 +24,13 @@ void Solution::run_manager()
 	switch (manager.state)
 	{
 	case Run_manager::STATE::INIT:
-		run_init(manager.iter, manager.index_thetha);
+		run_init(manager.iter + 1, manager.index_thetha);
 		break;
 	case Run_manager::STATE::RUN_APPROXIMATE:
-		run_approximate(manager.iter, manager.index_thetha);
+		run_approximate(manager.iter + 1, manager.index_thetha);
 		break;
 	case Run_manager::STATE::RUN:
-		run(manager.iter, manager.index_thetha);
+		run(manager.iter + 1, manager.index_thetha);
 		break;
 	}
 }
