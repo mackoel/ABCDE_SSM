@@ -7,6 +7,7 @@ Solution::Solution(const Abcde& _main_model, const Deep& _aux_model, const Param
 	param = _param;
 	alpha = 0.0;
 }
+
 inline void Solution::copy_posterior(Distribution::Posterior& posterior_to, Distribution::Posterior& posterior_from)
 {
 	for (int i = 0; i < main_model.count_iter; i++)
@@ -23,13 +24,13 @@ void Solution::run_manager()
 	switch (manager.state)
 	{
 	case Run_manager::STATE::INIT:
-		run_init(manager.iter + 1, manager.index_thetha);
+		run_init(manager.iter, manager.index_thetha);
 		break;
 	case Run_manager::STATE::RUN_APPROXIMATE:
-		run_approximate(manager.iter + 1, manager.index_thetha);
+		run_approximate(manager.iter, manager.index_thetha);
 		break;
 	case Run_manager::STATE::RUN:
-		run(manager.iter + 1, manager.index_thetha);
+		run(manager.iter, manager.index_thetha);
 		break;
 	}
 }
@@ -437,20 +438,12 @@ void Solution::print_log(int iter)
 {
 	ofstream logfile("log_result.txt", std::ios::app);
 	logfile << "iteration = " << iter << endl;
-	int print;
 	for (int i = 0; i < main_model.count_iter; i++)
 	{
 		logfile << "element number = " << i << " ";
 		for (int j = 0; j < main_model.count_opt_param; j++)
 		{
-			if (main_model.dtype[j] == 0)
-			{
-				print = (int)main_model.posterior.thetha[i].param[j];
-				logfile << "param[" << j << "] = " << print << " ";
-
-			}
-			else
-				logfile << "param[" << j << "] = " << main_model.posterior.thetha[i].param[j] << " ";
+			logfile << "param[" << j << "] = " << main_model.posterior.thetha[i].param[j] << " ";
 		}
 		logfile << "w = " << main_model.posterior.w[i] << " ";
 		logfile << "error = " << main_model.posterior.error[i] << " ";
