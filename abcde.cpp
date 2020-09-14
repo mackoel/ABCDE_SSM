@@ -81,7 +81,7 @@ double Abcde::set_new_weight()
 		for (int j = 0; j < count_opt_param; j++)
 		{
 			//norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], curr_thetha.param[j], 2.0 * sample_std[j]);
-			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j], sample_std[j]);
+			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j], 2.0 * sample_std[j]);
 		}
 		sum += posterior.w[i] * norm;
 	}
