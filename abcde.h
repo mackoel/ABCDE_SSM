@@ -4,6 +4,10 @@
 class Abcde : public Model
 {
 public:
+	enum BOUNDS_CROSSING_MODE {
+		SIN = 0,
+		TANH
+	};
 	Abcde();
 	Abcde(const string& param);	
 	bool accept_alpha(double alpha);
@@ -38,4 +42,5 @@ public:
 	vector<int> dtype;
 	vector<double> lbound, hbound;
 	double norm_error;
+	int bounds_crossing_mode;
 };
