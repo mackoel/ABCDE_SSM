@@ -81,7 +81,7 @@ double Abcde::set_new_weight()
 		for (int j = 0; j < count_opt_param; j++)
 		{
 			//norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], curr_thetha.param[j], 2.0 * sample_std[j]);
-			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j],  sqrt(2.0 *sample_std[j]));
+			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j], sample_std[j]);
 		}
 		sum += posterior.w[i] * norm;
 	}
@@ -119,6 +119,7 @@ void  Abcde::act_with_config_file()
 	count_iter = stoi(pt.get<std::string>("abcde.count_iter"));
 	start_iter = stoi(pt.get<std::string>("abcde.start_iter"));
 	count_opt_param = stoi(pt.get<std::string>("abcde.count_opt_param"));
+	bounds_crossing_mode = stoi(pt.get<std::string>("abcde.bounds_crossing_mode"));
 	vector<string> str_mean, str_std, str_hbound, str_lbound, str_dtype;
 	string s = pt.get<std::string>("abcde.mean");
 	boost::split(str_mean, s, boost::is_any_of(";"));
@@ -171,7 +172,10 @@ double Abcde::set_bounds(double x, double _lbound, double _hbound)
 	double alpha, beta, q;
 	alpha = (_hbound + _lbound) / 2.0;
 	beta = (_hbound - _lbound) / 2.0;
-	q = alpha + beta * sin(x);
+	if (bounds_crossing_mode == BOUNDS_CROSSING_MODE::SIN)
+		q = alpha + beta * sin(x);
+	else
+		q = alpha + beta * tanh(x);
 	return q;
 }
 
