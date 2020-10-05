@@ -222,13 +222,13 @@ double Abcde::get_statistics(Parametrs::MODE _mode,  double _error, int i)
 	double psi_curr, psi_prev;
 	if (_mode == Parametrs::MODE::INIT)
 	{
-		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(curr_thetha.delta, 0.0, 5.0));
-	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, set_bounds(posterior.thetha[i].delta, 0.0, 5.0));
+		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(curr_thetha.delta, 0.005, 5.0));
+	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, set_bounds(posterior.thetha[i].delta, 0.005, 5.0));
 	}
 	else
 	{
-        psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(posterior.delta_one, 0.0, 5.0));
-	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, set_bounds(posterior.delta_one, 0.0, 5.0));
+        psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(posterior.delta_one, 0.005, 5.0));
+	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, set_bounds(posterior.delta_one, 0.005, 5.0));
 	}
 	double curr_kernel_func = 1.0, prev_kernel_func = 1.0;
 	for (int j = 0; j < count_opt_param; j++)
