@@ -41,6 +41,12 @@ void Abcde::set_sample_dist_param()
 		}
 		sample_std[i] = sum / (count_iter - 1);
 	}
+	sum = 0.0;
+	for (int j = 0; j < count_iter; j++)
+	{
+		sum += posterior.error[j];
+	}
+	sample_error_mean = sum / count_iter;
 }
 
 
@@ -57,24 +63,52 @@ double Abcde::max_weight(double* w)
 
 Distribution::Thetha Abcde::get_prev_iter_with_weight()
 {
-	double prop;
+	/*	double prop;
+		for (int i = 0; i < count_iter; i++)
+		{
+			prop = generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, max_weight(posterior.w));
+			if (posterior.w[i] >= prop) {
+				return posterior.thetha[i];
+			}
+		}
+		return posterior.thetha[0];*/
+
+	double prop = generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
+	double sum_prop = 0.0;
 	for (int i = 0; i < count_iter; i++)
 	{
-		prop = generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, max_weight(posterior.w));
-		if (posterior.w[i] >= prop) {
+		if (prop > sum_prop && prop < sum_prop + posterior.w[i])
 			return posterior.thetha[i];
-		}
+		sum_prop += posterior.w[i];
 	}
-	return posterior.thetha[0];
+	return posterior.thetha[best_index];
 }
 
-double Abcde::set_new_weight()
+int Abcde::get_index_best()
+{
+	double min_error = 1.1;
+	best_index = 0;
+	for (int i = 0; i < count_iter; i++)
+	{
+		if (posterior.error[i] <= min_error)
+		{
+			best_index = i;
+			min_error = posterior.error[i];
+		}
+	}
+	return best_index;
+}
+
+double Abcde::set_new_weight(const int curr_index)
 {
 	double phi = 1.0, sum = 0.0, norm;
 	for (int i = 0; i < count_opt_param; i++)
 	{
-		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], sample_mean[i], sample_std[i]);
+	//	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], sample_mean[i], sample_std[i]);
+		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], posterior.thetha[best_index].param[i], abs(sample_mean[i] - posterior.thetha[best_index].param[i]));
+
 	}
+	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[curr_index], posterior.error[best_index], abs(posterior.error[best_index] - sample_error_mean));
 	for (int i = 0; i < count_iter; i++)
 	{
 		norm = 1.0;
@@ -105,7 +139,7 @@ void Abcde::update_posterior()
 	for(int i = 0; i < count_iter; i++)
 	{
 		curr_thetha = new_posterior.thetha[i];
-		new_posterior.w[i] = set_new_weight();
+		new_posterior.w[i] = set_new_weight(i);
 	}
 	normalize_weights();
 }
