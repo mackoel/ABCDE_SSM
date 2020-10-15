@@ -108,7 +108,7 @@ double Abcde::set_new_weight(const int curr_index)
 		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], posterior.thetha[best_index].param[i], abs(sample_mean[i] - posterior.thetha[best_index].param[i]));
 
 	}
-	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[curr_index], posterior.error[best_index], abs(posterior.error[best_index] - sample_error_mean));
+	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, new_posterior.error[curr_index], posterior.error[best_index], abs(posterior.error[best_index] - sample_error_mean));
 	for (int i = 0; i < count_iter; i++)
 	{
 		norm = 1.0;
