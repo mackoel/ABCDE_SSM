@@ -19,7 +19,8 @@ public:
 	Distribution::Thetha crossover(int index);
 	double max_weight(double* w);
 	Distribution::Thetha get_prev_iter_with_weight();
-	double set_new_weight();
+	int get_index_best();
+	double set_new_weight(const int curr_index);
 	Distribution::Thetha generate_vector_param(Distribution::TYPE_DISTR mode);
 	void normalize_weights();
 	void set_sample_dist_param();
@@ -30,6 +31,7 @@ public:
 	Distribution::Posterior posterior;
 	Distribution::Posterior new_posterior;
 	Distribution::Thetha curr_thetha;
+	int best_index;
 	Distribution generator;
 	int t;
 	int count_iter;
@@ -38,7 +40,8 @@ public:
 	double* error;
 	int count_opt_param;
 	vector<double> mean, std;
-	vector<double> sample_mean, sample_std;
+	vector<double> sample_mean, sample_std;//sample param from popuatin
+	double sample_error_mean;// sample error
 	vector<int> dtype;
 	vector<double> lbound, hbound;
 	double norm_error;
