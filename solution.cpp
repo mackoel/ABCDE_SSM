@@ -124,6 +124,7 @@ void Solution::run_init(int iter, int index_thetha)
 		for (int i = 0; i < main_model.count_iter; i++)
 			manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, main_model.norm_error, -1, i, main_model.count_opt_param);
 		main_model.set_sample_dist_param();
+		main_model.get_index_best();
 		print_log(-1);
 		manager.state = Run_manager::STATE::RUN_APPROXIMATE;
 		manager.change_state(manager.state);
