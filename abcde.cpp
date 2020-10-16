@@ -86,7 +86,7 @@ Distribution::Thetha Abcde::get_prev_iter_with_weight()
 
 int Abcde::get_index_best()
 {
-	double min_error = 1.1;
+	double min_error = 10;
 	best_index = 0;
 	for (int i = 0; i < count_iter; i++)
 	{
