@@ -257,6 +257,8 @@ void Solution::run_approximate(int iter, int index_thetha)
 #endif
 			main_model.update_posterior();
 			copy_posterior(main_model.posterior, main_model.new_posterior);
+			main_model.get_index_best();
+
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, main_model.norm_error, t, i, main_model.count_opt_param);
 			print_log(t);
@@ -403,6 +405,8 @@ void Solution::run(int iter, int index_thetha)
 #endif
 			main_model.update_posterior();
 			copy_posterior(main_model.posterior, main_model.new_posterior);
+			main_model.get_index_best();
+
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, main_model.norm_error, t, i, main_model.count_opt_param);
 			print_log(t);
