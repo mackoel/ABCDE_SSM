@@ -105,7 +105,7 @@ double Abcde::set_new_weight(const int curr_index)
 	for (int i = 0; i < count_opt_param; i++)
 	{
 	//	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], sample_mean[i], sample_std[i]);
-		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], new_posterior.thetha[best_index].param[i], abs(sample_mean[i] - new_posterior.thetha[best_index].param[i]));
+		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, set_bounds(curr_thetha.param[i], lbound[i], hbound[i]), set_bounds(new_posterior.thetha[best_index].param[i], lbound[i], hbound[i]), abs(sample_mean[i] - set_bounds(new_posterior.thetha[best_index].param[i], lbound[i], hbound[i])));
 
 	}
 	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, new_posterior.error[curr_index], new_posterior.error[best_index], abs(new_posterior.error[best_index] - sample_error_mean));
@@ -114,7 +114,7 @@ double Abcde::set_new_weight(const int curr_index)
 		norm = 1.0;
 		for (int j = 0; j < count_opt_param; j++)
 		{
-			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], curr_thetha.param[j], 2.0 * sample_std[j]);//new_posterior or posterior???
+			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, set_bounds(posterior.thetha[i].param[j], lbound[i], hbound[i]), set_bounds(curr_thetha.param[j], lbound[i], hbound[i]), 2.0 * sample_std[j]);//new_posterior or posterior???
 		//	norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j], 2.0 * sample_std[j]);
 		}
 		sum += posterior.w[i] * norm;
