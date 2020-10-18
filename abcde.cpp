@@ -23,7 +23,7 @@ void Abcde::normalize_weights()
 	}
 }
 
-void Abcde::set_sample_dist_param()
+void Abcde::set_sample_dist_param()//now bounds param
 {
 	double sum;
 	for (int i = 0; i < count_opt_param; i++)
@@ -31,15 +31,15 @@ void Abcde::set_sample_dist_param()
 		sum = 0.0;
 		for (int j = 0; j < count_iter; j++)
 		{
-			sum += posterior.thetha[j].param[i];
+			sum += set_bounds(posterior.thetha[j].param[i], lbound[i], hbound[i]);
 		}
 		sample_mean[i] = sum / count_iter;
 		sum = 0.0;
 		for (int j = 0; j < count_iter; j++)
 		{
-			sum += (posterior.thetha[j].param[i] - sample_mean[i]) * (posterior.thetha[j].param[i] - sample_mean[i]);
+			sum += (set_bounds(posterior.thetha[j].param[i], lbound[i], hbound[i]) - sample_mean[i]) * (set_bounds(posterior.thetha[j].param[i], lbound[i], hbound[i]) - sample_mean[i]);
 		}
-		sample_std[i] = sum / (count_iter - 1);
+		sample_std[i] = sqrt(sum / (count_iter - 1));
 	}
 	sum = 0.0;
 	for (int j = 0; j < count_iter; j++)
@@ -90,10 +90,10 @@ int Abcde::get_index_best()
 	best_index = 0;
 	for (int i = 0; i < count_iter; i++)
 	{
-		if (posterior.error[i] <= min_error)
+		if (new_posterior.error[i] <= min_error)
 		{
 			best_index = i;
-			min_error = posterior.error[i];
+			min_error = new_posterior.error[i];
 		}
 	}
 	return best_index;
@@ -105,17 +105,17 @@ double Abcde::set_new_weight(const int curr_index)
 	for (int i = 0; i < count_opt_param; i++)
 	{
 	//	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], sample_mean[i], sample_std[i]);
-		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], posterior.thetha[best_index].param[i], abs(sample_mean[i] - posterior.thetha[best_index].param[i]));
+		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], new_posterior.thetha[best_index].param[i], abs(sample_mean[i] - new_posterior.thetha[best_index].param[i]));
 
 	}
-	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, new_posterior.error[curr_index], posterior.error[best_index], abs(posterior.error[best_index] - sample_error_mean));
+	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, new_posterior.error[curr_index], new_posterior.error[best_index], abs(new_posterior.error[best_index] - sample_error_mean));
 	for (int i = 0; i < count_iter; i++)
 	{
 		norm = 1.0;
 		for (int j = 0; j < count_opt_param; j++)
 		{
-			//norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], curr_thetha.param[j], 2.0 * sample_std[j]);
-			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j], 2.0 * sample_std[j]);
+			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.thetha[i].param[j], curr_thetha.param[j], 2.0 * sample_std[j]);//new_posterior or posterior???
+		//	norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j], 2.0 * sample_std[j]);
 		}
 		sum += posterior.w[i] * norm;
 	}
@@ -135,7 +135,6 @@ Distribution::Thetha Abcde::generate_vector_param(Distribution::TYPE_DISTR mode)
 
 void Abcde::update_posterior()
 {
-	set_sample_dist_param();//previous iter posterior
 	for(int i = 0; i < count_iter; i++)
 	{
 		curr_thetha = new_posterior.thetha[i];
