@@ -95,7 +95,7 @@ void Solution::run_init(int iter, int index_thetha)
 			main_model.posterior.thetha[i].delta = main_model.new_posterior.thetha[i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
 			out << "delta = " << main_model.posterior.thetha[i].delta << endl;
 			out << "error = " << error / main_model.norm_error << endl;
-			
+
 		}
 #ifdef MPIZE
 		for (int j = 1; j < size; j++)
@@ -239,7 +239,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 					for (int s = 0; s < main_model.count_opt_param; s++)
 						out << main_model.curr_thetha.param[s] << endl;
 					out << "delta = " << main_model.curr_thetha.delta << endl;
-					alpha = main_model.get_statistics(Parametrs::MODE::INIT, error[i] / main_model.norm_error, j * main_model.count_iter / (size)+i);			
+					alpha = main_model.get_statistics(Parametrs::MODE::INIT, error[i] / main_model.norm_error, j * main_model.count_iter / (size)+i);
 					out << "error = " << error[i] / main_model.norm_error << endl;
 					out << "original alpha = " << alpha << endl;
 					alpha = min(1.0, alpha);
@@ -254,10 +254,12 @@ void Solution::run_approximate(int iter, int index_thetha)
 						out << "not accept" << endl;
 				}
 			}
-#endif
-			main_model.update_posterior();
-			copy_posterior(main_model.posterior, main_model.new_posterior);
+#endif	
 			main_model.get_index_best();
+
+			main_model.update_posterior();//перерасчет весов
+			copy_posterior(main_model.posterior, main_model.new_posterior); // перестановка
+			main_model.set_sample_dist_param();
 
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, main_model.norm_error, t, i, main_model.count_opt_param);
@@ -402,10 +404,12 @@ void Solution::run(int iter, int index_thetha)
 						out << "not accept" << endl;
 				}
 			}
-#endif
-			main_model.update_posterior();
-			copy_posterior(main_model.posterior, main_model.new_posterior);
+#endif				
 			main_model.get_index_best();
+
+			main_model.update_posterior();//перерасчет весов
+			copy_posterior(main_model.posterior, main_model.new_posterior);//перестановка
+			main_model.set_sample_dist_param();
 
 			for (int i = 0; i < main_model.count_iter; i++)
 				manager.create_log_file(manager.state, main_model.posterior, main_model.new_posterior, main_model.norm_error, t, i, main_model.count_opt_param);
