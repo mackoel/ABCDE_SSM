@@ -59,7 +59,7 @@ double Distribution::getLrand(double l)
 double Distribution::kernelNormalSampleWithParam(double x, double mean, double var)
 {
 	normal norm(mean, var);
-	return pdf(norm, x);
+	return cdf(norm, x);
 }
 
 double Distribution::kernel_function(Distribution::TYPE_DISTR mode, double x, const double param1, const double param2)
