@@ -101,24 +101,64 @@ int Abcde::get_index_best()
 
 double Abcde::set_new_weight(const int curr_index)
 {
-	double phi = 1.0, sum = 0.0, norm;
+	ofstream logfile("log_weight.txt", std::ios::app);
+	double phi = 1.0, sum = 0.0, norm, _x, _mean, _std;
+	logfile << "curr_index = " << curr_index << endl;
+	logfile << "best_index = " << best_index << endl;
 	for (int i = 0; i < count_opt_param; i++)
 	{
 	//	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[i], sample_mean[i], sample_std[i]);
-		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, set_bounds(curr_thetha.param[i], lbound[i], hbound[i]), set_bounds(new_posterior.thetha[best_index].param[i], lbound[i], hbound[i]), abs(sample_mean[i] - set_bounds(new_posterior.thetha[best_index].param[i], lbound[i], hbound[i])));
+		_x = set_bounds(curr_thetha.param[i], lbound[i], hbound[i]);
+		_mean = set_bounds(new_posterior.thetha[best_index].param[i], lbound[i], hbound[i]);
+		_std = abs(sample_mean[i] - set_bounds(new_posterior.thetha[best_index].param[i], lbound[i], hbound[i]));
+		logfile << "i = " << i << endl;
+		logfile << "x = " << _x << endl;
+		logfile << "mean = " << _mean << endl;
+		logfile << "std = " << _std << endl;
+		_std = max(_std, abs(hbound[i] - lbound[i]));
+		logfile << "final std = " << _std << endl;
+
+		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _x, _mean, _std);
+		logfile << "phi = " << phi << endl;
 
 	}
-	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, new_posterior.error[curr_index], new_posterior.error[best_index], abs(new_posterior.error[best_index] - sample_error_mean));
+	logfile << "error:" << endl;
+	_x = new_posterior.error[curr_index];
+	_mean = new_posterior.error[best_index];
+	_std = abs(new_posterior.error[best_index] - sample_error_mean);
+	logfile << "x = " << _x << endl;
+	logfile << "mean = " << _mean << endl;
+	logfile << "std = " << _std << endl;
+	_std = max(_std, 0.0001);//////////////////
+	logfile << "final std = " << _std << endl;
+	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _x, _mean, _std);
+	logfile << "phi = " << phi << endl;
 	for (int i = 0; i < count_iter; i++)
 	{
+		logfile << "i = " << i << endl;
+
 		norm = 1.0;
 		for (int j = 0; j < count_opt_param; j++)
 		{
-			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, set_bounds(posterior.thetha[i].param[j], lbound[i], hbound[i]), set_bounds(curr_thetha.param[j], lbound[i], hbound[i]), 2.0 * sample_std[j]);//new_posterior or posterior???
+			logfile << "j = " << j << endl;
+			_x = set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]);
+			_mean = set_bounds(curr_thetha.param[j], lbound[j], hbound[j]);
+			_std = 2.0 * sample_std[j];
+			logfile << "x = " << _x << endl;
+			logfile << "mean = " << _mean << endl;
+			logfile << "std = " << _std << endl;
+			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _x, _mean, _std);//new_posterior or posterior???
+			logfile << "norm = " << norm << endl;
+
 		//	norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, curr_thetha.param[j], posterior.thetha[i].param[j], 2.0 * sample_std[j]);
 		}
+		logfile << "posterior.w[" << i << "] = " << posterior.w[i] << endl;
 		sum += posterior.w[i] * norm;
+		logfile << "sum = " << sum << endl;
+
 	}
+	logfile.close();
+	logfile << "res = " << phi / sum << endl;
 	return phi / sum;
 }
 
