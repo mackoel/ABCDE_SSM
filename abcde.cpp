@@ -102,7 +102,7 @@ int Abcde::get_index_best()
 double Abcde::set_new_weight(const int curr_index)
 {
 	ofstream logfile("log_weight.txt", std::ios::app);
-	double phi = 1.0, sum = 0.0, norm, _x, _mean, _std;
+	double phi = 1.0, sum = 0.0, norm, _x, _mean, _std, res;
 	logfile << "curr_index = " << curr_index << endl;
 	logfile << "best_index = " << best_index << endl;
 	for (int i = 0; i < count_opt_param; i++)
@@ -115,9 +115,8 @@ double Abcde::set_new_weight(const int curr_index)
 		logfile << "x = " << _x << endl;
 		logfile << "mean = " << _mean << endl;
 		logfile << "std = " << _std << endl;
-		_std = max(_std, abs(hbound[i] - lbound[i]));
+		_std = min(max(_std, 1.0 / count_opt_param), abs(hbound[i] - lbound[i]) / count_opt_param);
 		logfile << "final std = " << _std << endl;
-
 		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _x, _mean, _std);
 		logfile << "phi = " << phi << endl;
 
@@ -155,11 +154,13 @@ double Abcde::set_new_weight(const int curr_index)
 		logfile << "posterior.w[" << i << "] = " << posterior.w[i] << endl;
 		sum += posterior.w[i] * norm;
 		logfile << "sum = " << sum << endl;
-
 	}
+	res = phi / sum;
+	logfile << "res = " << res << endl;
+	res = max(res, 1.0 / count_opt_param);
+	logfile << "final res = " << res << endl;
 	logfile.close();
-	logfile << "res = " << phi / sum << endl;
-	return phi / sum;
+	return res;
 }
 
 Distribution::Thetha Abcde::generate_vector_param(Distribution::TYPE_DISTR mode)
