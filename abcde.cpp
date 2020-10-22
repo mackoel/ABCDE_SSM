@@ -338,7 +338,10 @@ double Abcde::get_statistics(Parametrs::MODE _mode,  double _error, int i)
 	double prev_alpha = prev_kernel_func * psi_prev;
 	if (print_add_log) logfile << "prev_alpha = " << prev_alpha << endl;
 	if (prev_alpha == 0.0)
-		return 1.0;
+	{
+		if (print_add_log) logfile << "alpha = " << 0.5 << endl;
+		return 0.5;
+	}
 	double alpha = curr_alpha / prev_alpha;
 	if (print_add_log) logfile << "alpha = " << alpha << endl;
 	logfile.close();
