@@ -46,4 +46,5 @@ public:
 	vector<double> lbound, hbound;
 	double norm_error;
 	int bounds_crossing_mode;
+	int print_add_log;// 1 - additional print(weight, alpha); 0 - no print
 };
