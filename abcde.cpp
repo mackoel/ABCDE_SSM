@@ -149,15 +149,15 @@ double Abcde::set_new_weight(const int curr_index)
 			if (print_add_log) 		logfile << "j = " << j << endl;
 			_x = set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]);
 			_mean = set_bounds(curr_thetha.param[j], lbound[j], hbound[j]);
-			_std = 2.0 * sample_std[j];
-			_std = min(max(_std, 1.0 / count_opt_param), abs(hbound[j] - lbound[j]) / count_opt_param);
-
 			if (print_add_log)
 			{
 				logfile << "x = " << _x << endl;
 				logfile << "mean = " << _mean << endl;
-				logfile << "std = " << _std << endl;
 			}
+			_std = 2.0 * sample_std[j];
+			if (print_add_log) logfile << "std = " << _std << endl;
+			_std = min(max(_std, 1.0 / count_opt_param), abs(hbound[j] - lbound[j]) / count_opt_param);
+			if (print_add_log) logfile << "final std = " << _std << endl;
 			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _x, _mean, _std);//new_posterior or posterior???
 			if (print_add_log) 		logfile << "norm = " << norm << endl;
 		}
