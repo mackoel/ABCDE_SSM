@@ -359,7 +359,7 @@ void Solution::run(int iter, int index_thetha)
 					out << main_model.curr_thetha.param[s] << endl;
 				out << "delta = " << main_model.curr_thetha.delta << endl;
 
-				alpha = main_model.get_statistics(Parametrs::MODE::INIT, error / main_model.norm_error, i);
+				alpha = main_model.get_statistics(Parametrs::MODE::AUX, error / main_model.norm_error, i);
 				out << "error = " << error / main_model.norm_error << endl;
 
 				out << "original alpha = " << alpha << endl;
