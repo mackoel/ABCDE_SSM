@@ -103,30 +103,39 @@ double Abcde::set_new_weight(const int curr_index)
 {
 	ofstream logfile("log_weight.txt", std::ios::app);
 	double phi = 1.0, sum = 0.0, norm, _x, _mean, _std, res;
-	if (print_add_log) logfile << "curr_index = " << curr_index << endl;
-	if (print_add_log) logfile << "best_index = " << best_index << endl;
+	if (print_add_log)
+	{
+		logfile << "curr_index = " << curr_index << endl;
+		logfile << "best_index = " << best_index << endl;
+	}
 	for (int i = 0; i < count_opt_param; i++)
 	{
 		_x = set_bounds(curr_thetha.param[i], lbound[i], hbound[i]);
 		_mean = set_bounds(new_posterior.thetha[best_index].param[i], lbound[i], hbound[i]);
 		_std = abs(sample_mean[i] - set_bounds(new_posterior.thetha[best_index].param[i], lbound[i], hbound[i]));
-		if (print_add_log) logfile << "i = " << i << endl;
-		if (print_add_log) logfile << "x = " << _x << endl;
-		if (print_add_log) 	logfile << "mean = " << _mean << endl;
-		if (print_add_log) logfile << "std = " << _std << endl;
+		if (print_add_log)
+		{
+			logfile << "i = " << i << endl;
+			logfile << "x = " << _x << endl;
+			logfile << "mean = " << _mean << endl;
+			logfile << "std = " << _std << endl;
+		}
 		_std = min(max(_std, 1.0 / count_opt_param), abs(hbound[i] - lbound[i]) / count_opt_param);
 		if (print_add_log) logfile << "final std = " << _std << endl;
 		phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _x, _mean, _std);
 		if (print_add_log) logfile << "phi = " << phi << endl;
 
 	}
-	if (print_add_log) logfile << "error:" << endl;
 	_x = new_posterior.error[curr_index];
 	_mean = new_posterior.error[best_index];
 	_std = abs(new_posterior.error[best_index] - sample_error_mean);
-	if (print_add_log) logfile << "x = " << _x << endl;
-	if (print_add_log) logfile << "mean = " << _mean << endl;
-	if (print_add_log) logfile << "std = " << _std << endl;
+	if (print_add_log)
+	{
+		logfile << "error:" << endl;
+		logfile << "x = " << _x << endl;
+		logfile << "mean = " << _mean << endl;
+		logfile << "std = " << _std << endl;
+	}
 	_std = max(_std, 0.0001);//////////////////
 	if (print_add_log) logfile << "final std = " << _std << endl;
 	phi *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _x, _mean, _std);
@@ -141,9 +150,14 @@ double Abcde::set_new_weight(const int curr_index)
 			_x = set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]);
 			_mean = set_bounds(curr_thetha.param[j], lbound[j], hbound[j]);
 			_std = 2.0 * sample_std[j];
-			if (print_add_log) 		logfile << "x = " << _x << endl;
-			if (print_add_log) 		logfile << "mean = " << _mean << endl;
-			if (print_add_log) 		logfile << "std = " << _std << endl;
+			_std = min(max(_std, 1.0 / count_opt_param), abs(hbound[j] - lbound[j]) / count_opt_param);
+
+			if (print_add_log)
+			{
+				logfile << "x = " << _x << endl;
+				logfile << "mean = " << _mean << endl;
+				logfile << "std = " << _std << endl;
+			}
 			norm *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _x, _mean, _std);//new_posterior or posterior???
 			if (print_add_log) 		logfile << "norm = " << norm << endl;
 		}
@@ -291,46 +305,68 @@ Distribution::Thetha Abcde::crossover(int index)
 double Abcde::get_statistics(Parametrs::MODE _mode,  double _error, int i)
 {
 	ofstream logfile("log_alpha.txt", std::ios::app);
-	double psi_curr, psi_prev;
+	double psi_curr, psi_prev, _std;
 	if (print_add_log) logfile << "index = " << i << endl;
 	if (_mode == Parametrs::MODE::INIT)
 	{
-		if (print_add_log) logfile << "INIT" << endl;
-		if (print_add_log) logfile << "curr_error = " << _error << endl;
-		if (print_add_log) logfile << "curr_delta = " << set_bounds(curr_thetha.delta, 0.005, 5.0) << endl;
+		if (print_add_log)
+		{
+			logfile << "INIT" << endl;
+			logfile << "curr_error(x) = " << _error << endl;
+			logfile << "curr_delta(std) = " << set_bounds(curr_thetha.delta, 0.005, 5.0) << endl;
+		}
 		psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(curr_thetha.delta, 0.005, 5.0));
-		if (print_add_log) logfile << "curr_psi = " << psi_curr << endl;
-		if (print_add_log) logfile << "prev_error = " << posterior.error[i] << endl;
-		if (print_add_log) logfile << "prev_delta = " << set_bounds(posterior.thetha[i].delta, 0.005, 5.0) << endl;
+		if (print_add_log) 
+		{
+			logfile << "curr_psi = " << psi_curr << endl;
+			logfile << "prev_error(x) = " << posterior.error[i] << endl;
+			logfile << "prev_delta(std) = " << set_bounds(posterior.thetha[i].delta, 0.005, 5.0) << endl;
+		}
 	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, set_bounds(posterior.thetha[i].delta, 0.005, 5.0));
 		if (print_add_log) logfile << "prev_psi = " << psi_prev << endl;
 	}
 	else
 	{
-		if (print_add_log) logfile << "ONE DELTA" << endl;
-		if (print_add_log) logfile << "curr_error = " << _error << endl;
-		if (print_add_log) logfile << "curr_delta = " << set_bounds(posterior.delta_one, 0.005, 5.0) << endl;
+		if (print_add_log)
+		{
+			logfile << "ONE DELTA" << endl;
+			logfile << "curr_error(x) = " << _error << endl;
+			logfile << "curr_delta(std) = " << set_bounds(posterior.delta_one, 0.005, 5.0) << endl;
+		}
         psi_curr = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, _error, 0.0, set_bounds(posterior.delta_one, 0.005, 5.0));
-		if (print_add_log) logfile << "curr_psi = " << psi_curr << endl;
-		if (print_add_log) logfile << "prev_error = " << posterior.error[i] << endl;
-		if (print_add_log) logfile << "prev_delta = " << set_bounds(posterior.delta_one, 0.005, 5.0) << endl;
+		if (print_add_log)
+		{
+			logfile << "curr_psi = " << psi_curr << endl;
+			logfile << "prev_error(x) = " << posterior.error[i] << endl;
+			logfile << "prev_delta(std) = " << set_bounds(posterior.delta_one, 0.005, 5.0) << endl;
+		}
 	    psi_prev = generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, posterior.error[i], 0.0, set_bounds(posterior.delta_one, 0.005, 5.0));
 		if (print_add_log) logfile << "prev_psi = " << psi_prev << endl;
 	}
 	double curr_kernel_func = 1.0, prev_kernel_func = 1.0;
 	for (int j = 0; j < count_opt_param; j++)
 	{
-		if (print_add_log) logfile << "param[" << j << "] = " << endl;
-		if (print_add_log) logfile << "curr_param(x) = " << set_bounds(curr_thetha.param[j], lbound[j], hbound[j]) <<  endl;
-		if (print_add_log) logfile << "prev_param(mean) = " << set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]) << endl;
-		if (print_add_log) logfile << "std = " << sample_std[j] << endl;
-		curr_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, set_bounds(curr_thetha.param[j], lbound[j], hbound[j]), set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]), sample_std[j]);
-		if (print_add_log) logfile << "curr_kernel_func = " << curr_kernel_func << endl;
-		if (print_add_log) logfile << "prev_param(x) = " << set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]) << endl;
-		if (print_add_log) logfile << "curr_param(mean) = " << set_bounds(curr_thetha.param[j], lbound[j], hbound[j]) << endl;
-		if (print_add_log) logfile << "std = " << sample_std[j] << endl;
-		if (print_add_log) logfile << "prev_kernel_func = " << prev_kernel_func << endl;
-		prev_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]), set_bounds(curr_thetha.param[j], lbound[j], hbound[j]), sample_std[j]);
+		if (print_add_log)
+		{
+			logfile << "param[" << j << "] = " << endl;
+			logfile << "curr_param(x) = " << set_bounds(curr_thetha.param[j], lbound[j], hbound[j]) << endl;
+			logfile << "prev_param(mean) = " << set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]) << endl;
+			logfile << "std = " << sample_std[j] << endl;
+		}
+		_std = sample_std[j];
+		_std = min(max(_std, 1.0 / count_opt_param), abs(hbound[j] - lbound[j]) / count_opt_param);
+		if (print_add_log) logfile << "final std = " << _std << endl;
+
+		curr_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, set_bounds(curr_thetha.param[j], lbound[j], hbound[j]), set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]), _std);
+		if (print_add_log)
+		{
+			logfile << "curr_kernel_func = " << curr_kernel_func << endl;
+			logfile << "prev_param(x) = " << set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]) << endl;
+			logfile << "curr_param(mean) = " << set_bounds(curr_thetha.param[j], lbound[j], hbound[j]) << endl;
+			logfile << "std = " << sample_std[j] << endl;
+			logfile << "final std = " << _std << endl;
+		}
+		prev_kernel_func *= generator.kernel_function(Distribution::TYPE_DISTR::NORM_WITH_PARAM, set_bounds(posterior.thetha[i].param[j], lbound[j], hbound[j]), set_bounds(curr_thetha.param[j], lbound[j], hbound[j]), _std);
 		if (print_add_log) logfile << "prev_kernel_func = " << prev_kernel_func << endl;
 	}
 	double curr_alpha = curr_kernel_func * psi_curr;
