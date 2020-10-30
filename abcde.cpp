@@ -244,7 +244,7 @@ void  Abcde::act_with_config_file()
 Distribution::Thetha Abcde::mutation(int index)
 {
 	ofstream logfile("log_mutation.txt", std::ios::app);
-	logfile << "index = " << index << endl;
+	if (print_add_log) logfile << "index = " << index << endl;
 	Distribution::Thetha _curr_thetha = posterior.thetha[index];
 	for (int i = 0; i < count_opt_param; i++)
 	{
