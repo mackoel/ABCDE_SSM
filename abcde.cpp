@@ -243,12 +243,23 @@ void  Abcde::act_with_config_file()
 
 Distribution::Thetha Abcde::mutation(int index)
 {
+	ofstream logfile("log_mutation.txt", std::ios::app);
+	logfile << "index = " << index << endl;
 	Distribution::Thetha _curr_thetha = posterior.thetha[index];
 	for (int i = 0; i < count_opt_param; i++)
 	{
+		if (print_add_log)
+		{
+			logfile << "param[" << i << "] = " << i << endl;
+			logfile << "prev param = " << _curr_thetha.param[i] << endl;
+		}
 		_curr_thetha.param[i] = _curr_thetha.param[i] + generator.prior_distribution(Distribution::TYPE_DISTR::NORM, mean[count_opt_param-1], std[count_opt_param - 1]);// another mean for 
+		if (print_add_log) logfile << "new param = " << _curr_thetha.param[i] << endl;
 	}
+	if (print_add_log) logfile << "prev delta = " << _curr_thetha.delta << endl;
 	_curr_thetha.delta = _curr_thetha.delta + generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+	if (print_add_log) logfile << "new delta = " << _curr_thetha.delta << endl;
+	logfile.close();
 	return _curr_thetha;
 }
 
@@ -275,11 +286,19 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 }
 Distribution::Thetha Abcde::crossover(int index)
 {
+	ofstream logfile("log_crossover.txt", std::ios::app);
 	double si_1 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), si_2 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), b = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.001, 0.001);
 	Distribution::Thetha thetha_b, thetha_m, thetha_n, _curr_thetha;
 	int m_index, n_index;
 	m_index = rand() % (count_iter - 1);
 	n_index = rand() % (count_iter - 1);
+	if (print_add_log)
+	{
+		logfile << "index = " << index << endl;
+		logfile << "si_1 = " << si_1 << endl;
+		logfile << "si_2 = " << si_2 << endl;
+		logfile << "b = " << b << endl;
+	}
 
 	while (m_index == index)
 	{
@@ -289,6 +308,13 @@ Distribution::Thetha Abcde::crossover(int index)
 	{
 		n_index = rand() % (count_iter - 1);
 	}
+
+	if (print_add_log)
+	{
+		logfile << "m_index = " << m_index << endl;
+		logfile << "n_index = " << n_index << endl;
+	}
+
 	thetha_b = get_prev_iter_with_weight();
 	thetha_m = posterior.thetha[m_index];
 	thetha_n = posterior.thetha[n_index];
@@ -296,9 +322,19 @@ Distribution::Thetha Abcde::crossover(int index)
 	_curr_thetha = posterior.thetha[index];
 	for (int i = 0; i < count_opt_param; i++)
 	{
+		if (print_add_log)
+		{
+			logfile << "param[" << i << "] = " << i << endl;
+			logfile << "prev param = " << _curr_thetha.param[i] << endl;
+		}
 		_curr_thetha.param[i] = ((double)_curr_thetha.param[i] + si_1 * ((double)thetha_m.param[i] - (double)thetha_n.param[i]) + si_2 * ((double)thetha_b.param[i] - (double)_curr_thetha.param[i]) + b);
+		if (print_add_log) 	logfile << "new param = " << _curr_thetha.param[i] << endl;
+
 	}
+	if (print_add_log) logfile << "prev delta = " << _curr_thetha.delta << endl;
 	_curr_thetha.delta = _curr_thetha.delta + si_1 * (thetha_m.delta - thetha_n.delta) + si_2 * (thetha_b.delta - _curr_thetha.delta) + b;
+	if (print_add_log) logfile << "new delta = " << _curr_thetha.delta << endl;
+	logfile.close();
 	return _curr_thetha;
 }
 
