@@ -49,7 +49,6 @@ void Abcde::set_sample_dist_param()//now bounds param
 	sample_error_mean = sum / count_iter;
 }
 
-
 double Abcde::max_weight(double* w)
 {
 	double max_w = -1.0;
@@ -183,7 +182,6 @@ Distribution::Thetha Abcde::generate_vector_param(Distribution::TYPE_DISTR mode)
 	return thetha;
 }
 
-
 void Abcde::update_posterior()
 {
 	for(int i = 0; i < count_iter; i++)
@@ -193,6 +191,7 @@ void Abcde::update_posterior()
 	}
 	normalize_weights();
 }
+
 void  Abcde::act_with_config_file()
 {
 	boost::property_tree::ptree pt;
@@ -204,6 +203,7 @@ void  Abcde::act_with_config_file()
 	start_iter = stoi(pt.get<std::string>("abcde.start_iter"));
 	count_opt_param = stoi(pt.get<std::string>("abcde.count_opt_param"));
 	bounds_crossing_mode = stoi(pt.get<std::string>("abcde.bounds_crossing_mode"));
+	crossing_mode = stoi(pt.get<std::string>("abcde.crossing_mode"));
 	print_add_log = stoi(pt.get<std::string>("abcde.print_add_log"));
 	vector<string> str_mean, str_std, str_hbound, str_lbound, str_dtype;
 	string s = pt.get<std::string>("abcde.mean");
@@ -284,6 +284,7 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 	}
 	return thetha;
 }
+
 Distribution::Thetha Abcde::crossover(int index)
 {
 	ofstream logfile("log_crossover.txt", std::ios::app);
