@@ -8,6 +8,13 @@ public:
 		SIN = 0,
 		TANH
 	};
+
+	enum CROSSING_MODE {
+		ALL = 0,
+		ONLY_CROSSOVER,
+		ONLY_MUTATION
+	};
+
 	Abcde();
 	Abcde(const string& param);	
 	bool accept_alpha(double alpha);
@@ -46,5 +53,6 @@ public:
 	vector<double> lbound, hbound;
 	double norm_error;
 	int bounds_crossing_mode;
+	int crossing_mode;
 	int print_add_log;// 1 - additional print(weight, alpha); 0 - no print
 };
