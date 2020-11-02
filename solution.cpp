@@ -1,6 +1,5 @@
 #include "pch.h"
 
-
 Solution::Solution(const Abcde& _main_model, const Deep& _aux_model, const Parametrs& _param) {
 	main_model = _main_model;
 	aux_model = _aux_model;
@@ -47,7 +46,6 @@ void Solution::run_init(int iter, int index_thetha)
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	cout << "This rank is " << rank << endl;
 	cout << "This size is " << size << endl;
-
 	MPI_Status status;
 	if (rank == 0)
 	{
@@ -95,7 +93,6 @@ void Solution::run_init(int iter, int index_thetha)
 			main_model.posterior.thetha[i].delta = main_model.new_posterior.thetha[i].delta = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
 			out << "delta = " << main_model.posterior.thetha[i].delta << endl;
 			out << "error = " << error / main_model.norm_error << endl;
-
 		}
 #ifdef MPIZE
 		for (int j = 1; j < size; j++)
@@ -107,7 +104,7 @@ void Solution::run_init(int iter, int index_thetha)
 			{
 				main_model.posterior.thetha[j * main_model.count_iter / (size)+i] = all_thetha[j * main_model.count_iter / (size)+i];
 				out << "iteration = " << -1 << endl;
-				out << "element number = " << j * main_model.count_iter / (size)+i << endl;
+				out << "element number = " << j * main_model.count_iter / (size) + i << endl;
 				for (int s = 0; s < main_model.count_opt_param; s++)
 					out << main_model.posterior.thetha[j * main_model.count_iter / (size)+i].param[s] << endl;
 				main_model.posterior.w[j * main_model.count_iter / (size)+i] = 1.0 / main_model.count_iter;
@@ -179,15 +176,24 @@ void Solution::run_approximate(int iter, int index_thetha)
 
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
-					double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
-					if (choice < 0.05)
+					if (main_model.crossing_mode == Abcde::CROSSING_MODE::ALL)
 					{
-						main_model.curr_thetha = main_model.mutation(i);
+						double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
+						if (choice < 0.05)
+						{
+							main_model.curr_thetha = main_model.mutation(i + j * main_model.count_iter / size);
+						}
+						else
+						{
+							main_model.curr_thetha = main_model.crossover(i + j * main_model.count_iter / size);
+						}
 					}
-					else
-					{
-						main_model.curr_thetha = main_model.crossover(i);
-					}
+					else if (main_model.crossing_mode == Abcde::CROSSING_MODE::ONLY_CROSSOVER)
+						main_model.curr_thetha = main_model.crossover(i + j * main_model.count_iter / size);
+					else if (main_model.crossing_mode == Abcde::CROSSING_MODE::ONLY_MUTATION)
+						main_model.curr_thetha = main_model.mutation(i + j * main_model.count_iter / size);
+					
+
 					_param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
 				}
@@ -287,7 +293,7 @@ void Solution::run_approximate(int iter, int index_thetha)
 			vector<double> error;
 			for (int k = 0; k < main_model.count_iter / size; k++)
 				MPI_Recv(&_param[k][0], main_model.count_opt_param, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
-			for (int i = 0; i < main_model.count_iter / (size); i++)
+			for (int i = 0; i < main_model.count_iter / size; i++)
 			{
 				Distribution::Thetha curr_thetha;
 				curr_thetha.param = _param[i];
@@ -329,11 +335,23 @@ void Solution::run(int iter, int index_thetha)
 
 				for (int i = 0; i < main_model.count_iter / size; i++)
 				{
-					double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
-					if (choice < 0.05)
-						main_model.curr_thetha = main_model.mutation(i);
-					else
-						main_model.curr_thetha = main_model.crossover(i);
+					if (main_model.crossing_mode == Abcde::CROSSING_MODE::ALL)
+					{
+						double choice = main_model.generator.prior_distribution(Distribution::TYPE_DISTR::RANDOM, 0.0, 1.0);
+						if (choice < 0.05)
+						{
+							main_model.curr_thetha = main_model.mutation(i + j * main_model.count_iter / size);
+						}
+						else
+						{
+							main_model.curr_thetha = main_model.crossover(i + j * main_model.count_iter / size);
+						}
+					}
+					else if (main_model.crossing_mode == Abcde::CROSSING_MODE::ONLY_CROSSOVER)
+						main_model.curr_thetha = main_model.crossover(i + j * main_model.count_iter / size);
+					else if (main_model.crossing_mode == Abcde::CROSSING_MODE::ONLY_MUTATION)
+						main_model.curr_thetha = main_model.mutation(i + j * main_model.count_iter / size);
+					
 					_param.push_back(main_model.curr_thetha.param);
 					all_thetha.push_back(main_model.curr_thetha);
 				}
@@ -345,7 +363,7 @@ void Solution::run(int iter, int index_thetha)
 				}
 #endif
 			}
-			for (int i = 0; i < main_model.count_iter / (size); i++)
+			for (int i = 0; i < main_model.count_iter / size; i++)
 			{
 				double error;
 				main_model.curr_thetha = all_thetha[i];
