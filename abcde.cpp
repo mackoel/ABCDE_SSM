@@ -205,7 +205,7 @@ void  Abcde::act_with_config_file()
 	bounds_crossing_mode = stoi(pt.get<std::string>("abcde.bounds_crossing_mode"));
 	crossing_mode = stoi(pt.get<std::string>("abcde.crossing_mode"));
 	print_add_log = stoi(pt.get<std::string>("abcde.print_add_log"));
-	vector<string> str_mean, str_std, str_hbound, str_lbound, str_dtype;
+	vector<string> str_mean, str_std, str_hbound, str_lbound, str_dtype, str_cross_dist_mean, str_cross_dist_std, str_mut_dist_mean, str_mut_dist_std;
 	string s = pt.get<std::string>("abcde.mean");
 	boost::split(str_mean, s, boost::is_any_of(";"));
 	for (int i = 0; i < str_mean.size(); i++)
@@ -239,6 +239,30 @@ void  Abcde::act_with_config_file()
 	{
 		dtype.push_back(stoi(str_dtype[i]));
 	}
+	s = pt.get<std::string>("abcde.mut_dist_mean");
+	boost::split(str_mut_dist_mean, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_mut_dist_mean.size(); i++)
+	{
+		mut_dist_mean.push_back(stod(str_mut_dist_mean[i]));
+	}
+	s = pt.get<std::string>("abcde.mut_dist_std");
+	boost::split(str_mut_dist_std, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_mut_dist_std.size(); i++)
+	{
+		mut_dist_std.push_back(stod(str_mut_dist_std[i]));
+	}
+	s = pt.get<std::string>("abcde.cross_dist_mean");
+	boost::split(str_cross_dist_mean, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_cross_dist_mean.size(); i++)
+	{
+		cross_dist_mean.push_back(stod(str_cross_dist_mean[i]));
+	}
+	s = pt.get<std::string>("abcde.cross_dist_std");
+	boost::split(str_cross_dist_std, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_cross_dist_std.size(); i++)
+	{
+		cross_dist_std.push_back(stod(str_cross_dist_std[i]));
+	}
 }
 
 Distribution::Thetha Abcde::mutation(int index)
@@ -253,11 +277,11 @@ Distribution::Thetha Abcde::mutation(int index)
 			logfile << "param[" << i << "] = " << i << endl;
 			logfile << "prev param = " << _curr_thetha.param[i] << endl;
 		}
-		_curr_thetha.param[i] = _curr_thetha.param[i] + generator.prior_distribution(Distribution::TYPE_DISTR::NORM, mean[count_opt_param-1], std[count_opt_param - 1]);// another mean for 
+		_curr_thetha.param[i] = _curr_thetha.param[i] + generator.prior_distribution(Distribution::TYPE_DISTR::NORM, mut_dist_mean[0], mut_dist_std[0]);// another mean for 
 		if (print_add_log) logfile << "new param = " << _curr_thetha.param[i] << endl;
 	}
 	if (print_add_log) logfile << "prev delta = " << _curr_thetha.delta << endl;
-	_curr_thetha.delta = _curr_thetha.delta + generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, 0.005);
+	_curr_thetha.delta = _curr_thetha.delta + generator.prior_distribution(Distribution::TYPE_DISTR::EXPON, mut_dist_mean[1]);
 	if (print_add_log) logfile << "new delta = " << _curr_thetha.delta << endl;
 	logfile.close();
 	return _curr_thetha;
@@ -288,7 +312,7 @@ Distribution::Thetha Abcde::bounds(Distribution::Thetha _curr_thetha)
 Distribution::Thetha Abcde::crossover(int index)
 {
 	ofstream logfile("log_crossover.txt", std::ios::app);
-	double si_1 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), si_2 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.5, 1), b = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, 0.001, 0.001);
+	double si_1 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, cross_dist_mean[0], cross_dist_std[0]), si_2 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, cross_dist_mean[1], cross_dist_std[1]), b = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, cross_dist_mean[2], cross_dist_std[2]);
 	Distribution::Thetha thetha_b, thetha_m, thetha_n, _curr_thetha;
 	int m_index, n_index;
 	m_index = rand() % (count_iter - 1);
