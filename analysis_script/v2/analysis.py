@@ -39,7 +39,6 @@ def _bounds(data, number_params, params, notUse=False):  # for just convert type
                 data[i] = a + b * math.tanh(float(data[i]))
     return data
 
-
 def _is_string_with_definition_iter(list):
     return bool(len(list) > 3)
 
@@ -79,7 +78,7 @@ def plot_graphics_evolution_param(file_name, params, isBounds = False):
             fig = plt.figure()
             data_for_graphics = [float(x) for x in param[theta:len_param:params["count_theta"]]]
             if isBounds:
-                one = _bounds(data_for_graphics, number_param, params)
+                _bounds(data_for_graphics, number_param, params)
                 filename = os.path.join(folder, "images", "params[" + str(number_param) + "]" +
                                         "individ[" + str(theta) + "]_bounds.pdf")
             else:
