@@ -267,7 +267,7 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
                 num_list = [num for num in line_list[start_take_param:len(line_list):step]]
             else:
                 best_error = 10000.0
-                if  param_values is not None:
+                if param_values is not None:
                     if param_values not in chain_data:
                         chain_data.append(param_values)
                 continue
@@ -275,7 +275,7 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
             best_error = float(best_error)
             if new_error <= best_error:
                 param_values = num_list
-                best_error = num_list[error_index]
+                best_error = new_error
 
     list_seed = [-1 for _ in range(0, params["count_iter"] * params["count_theta"])]
 
@@ -361,12 +361,11 @@ def plot_error(folder, params, cdo, d_data, _slice=0, mode=0):
     #                    error_valid.append(float(d.split("target[21]:", 1)[1].split(" ")[0]) / size_valid)
     #                    break
     for d in cdo[_slice:]:
-        if "target[1]" not in d or "target[21]" not in d:
+
+        if "target[7]" not in d or "target[21]" not in d:
             continue
-        training_value = float(d.split("target[1]:", 1)[1].split(" ")[0]) / params["size_training"]
-        valid_value = float(d.split("target[21]:", 1)[1].split(" ")[0]) / params["size_valid"]
-        if training_value > 1000000 or valid_value > 1000000:
-            continue
+        training_value = math.sqrt(float(d.split("target[7]:", 1)[1].split()[0]) / params["size_training"])
+        valid_value = math.sqrt(float(d.split("target[21]:", 1)[1].split()[0]) / params["size_valid"])
         error_training.append(training_value)
         error_valid.append(valid_value)
 
@@ -423,10 +422,11 @@ def plot_error(folder, params, cdo, d_data, _slice=0, mode=0):
    # plt.show()
     f.savefig(filename)
 
-if __name__ == "__main__":
-    folder_paths = ["data/09_03/v3/with_snp", "data/09_03/v4/with_snp", "data/09_03/v4/without_snp"]
-  #  folder_paths = ["data/09_03/v4/without_snp"]
 
+if __name__ == "__main__":
+  #  folder_paths = ["data/09_03/v3/with_snp", "data/09_03/v4/with_snp", "data/09_03/v4/without_snp"]
+    folder_paths = ["data/09_03/v4/with_snp"]
+    #1600 - 1333 and 333
     log_result_name = "log_result.txt"
     log_iter_name = "log_iteration.txt"
     log_deeps_name = "log_deeps"
@@ -434,8 +434,8 @@ if __name__ == "__main__":
               "count_theta": 12,
               "lbound": [1, 10, 0.005, 0.005, 0.005, 0.005],
               "hbound": [7, 20, 10, 1, 1, 10],
-              "size_training": 1000,
-              "size_valid": 666,
+              "size_training": 1333,
+              "size_valid": 333,
               "count_param": 6,
               "delta_index": 8,
               "count_iter": None}
@@ -444,12 +444,12 @@ if __name__ == "__main__":
         log_deeps = os.path.abspath(os.path.join(folder, log_deeps_name))
         log_iter = os.path.abspath(os.path.join(folder, log_iter_name))
 
-        plot_graphics_evolution_param(log_result, params)
+     #  plot_graphics_evolution_param(log_result, params)
         count_iter = plot_graphics_evolution_param(log_result, params, isBounds=True)
         params["count_iter"] = count_iter
 
-        plot_graphics_evolution_param_best(log_result, params)
-        plot_graphics_evolution_param_best(log_result, params, isBounds=True)
+      #  plot_graphics_evolution_param_best(log_result, params)
+     #   plot_graphics_evolution_param_best(log_result, params, isBounds=True)
 
         result_data, deep_data, iter_data = read_logs(log_result, log_deeps, log_iter)
         accept_deep_output, best_deep_output = plot_table(folder,
