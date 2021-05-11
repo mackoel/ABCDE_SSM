@@ -48,7 +48,7 @@ public:
 	int count_opt_param;
 	vector<double> mean, std;
 	vector<double> sample_mean, sample_std;//sample param from population
-	vector<double> mut_dist_mean, mut_dist_std, cross_dist_mean, cross_dist_std;
+	vector<double> mut_dist_mean, mut_dist_std, cross_dist_mean, cross_dist_std, cross_sampler_b;
 	double sample_error_mean;// sample error
 	vector<int> dtype;
 	vector<double> lbound, hbound;
