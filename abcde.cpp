@@ -205,7 +205,7 @@ void  Abcde::act_with_config_file()
 	bounds_crossing_mode = stoi(pt.get<std::string>("abcde.bounds_crossing_mode"));
 	crossing_mode = stoi(pt.get<std::string>("abcde.crossing_mode"));
 	print_add_log = stoi(pt.get<std::string>("abcde.print_add_log"));
-	vector<string> str_mean, str_std, str_hbound, str_lbound, str_dtype, str_cross_dist_mean, str_cross_dist_std, str_mut_dist_mean, str_mut_dist_std;
+	vector<string> str_mean, str_std, str_hbound, str_lbound, str_dtype, str_cross_dist_mean, str_cross_dist_std, str_mut_dist_mean, str_mut_dist_std, str_cross_sampler_b;
 	string s = pt.get<std::string>("abcde.mean");
 	boost::split(str_mean, s, boost::is_any_of(";"));
 	for (int i = 0; i < str_mean.size(); i++)
@@ -263,6 +263,14 @@ void  Abcde::act_with_config_file()
 	{
 		cross_dist_std.push_back(stod(str_cross_dist_std[i]));
 	}
+	
+	s = pt.get<std::string>("abcde.cross_sampler_b");
+	boost::split(str_cross_sampler_b, s, boost::is_any_of(";"));
+	for (int i = 0; i < str_cross_sampler_b.size(); i++)
+	{
+		cross_sampler_b.push_back(stod(str_cross_sampler_b[i]));
+	}
+	
 }
 
 Distribution::Thetha Abcde::mutation(int index)
@@ -313,6 +321,8 @@ Distribution::Thetha Abcde::crossover(int index)
 {
 	ofstream logfile("log_crossover.txt", std::ios::app);
 	double si_1 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, cross_dist_mean[0], cross_dist_std[0]), si_2 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, cross_dist_mean[1], cross_dist_std[1]), b = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, cross_dist_mean[2], cross_dist_std[2]);
+	si_1 = max(abs(si_1), abs(si_2));
+	si_2 = min(abs(si_1), abs(si_2));
 	Distribution::Thetha thetha_b, thetha_m, thetha_n, _curr_thetha;
 	int m_index, n_index;
 	m_index = rand() % (count_iter - 1);
@@ -352,7 +362,7 @@ Distribution::Thetha Abcde::crossover(int index)
 			logfile << "param[" << i << "] = " << i << endl;
 			logfile << "prev param = " << _curr_thetha.param[i] << endl;
 		}
-		_curr_thetha.param[i] = ((double)_curr_thetha.param[i] + si_1 * ((double)thetha_m.param[i] - (double)thetha_n.param[i]) + si_2 * ((double)thetha_b.param[i] - (double)_curr_thetha.param[i]) + b);
+		_curr_thetha.param[i] = ((double)_curr_thetha.param[i] + si_1 * ((double)thetha_m.param[i] - (double)thetha_n.param[i]) + si_2 * ((double)thetha_b.param[i] - (double)_curr_thetha.param[i]) + (double)cross_sampler_b[i] * generator.prior_distribution(Distribution::NORM_WITH_PARAM, mean[i], std[i]));
 		if (print_add_log) 	logfile << "new param = " << _curr_thetha.param[i] << endl;
 
 	}
