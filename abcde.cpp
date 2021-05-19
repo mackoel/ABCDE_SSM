@@ -321,8 +321,9 @@ Distribution::Thetha Abcde::crossover(int index)
 {
 	ofstream logfile("log_crossover.txt", std::ios::app);
 	double si_1 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, cross_dist_mean[0], cross_dist_std[0]), si_2 = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, cross_dist_mean[1], cross_dist_std[1]), b = generator.prior_distribution(Distribution::TYPE_DISTR::NORM_WITH_PARAM, cross_dist_mean[2], cross_dist_std[2]);
-	si_1 = max(abs(si_1), abs(si_2));
+	double tmp = max(abs(si_1), abs(si_2));
 	si_2 = min(abs(si_1), abs(si_2));
+	si_1 = tmp;
 	Distribution::Thetha thetha_b, thetha_m, thetha_n, _curr_thetha;
 	int m_index, n_index;
 	m_index = rand() % (count_iter - 1);
