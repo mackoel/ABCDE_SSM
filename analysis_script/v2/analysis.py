@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import mannwhitneyu
 import numpy as np
 
+import errno
+import sys
 
 def set_param(data, params):
     for i in range(0, len(params["lbound"])):
@@ -49,6 +51,18 @@ def plot_graphics_evolution_param(file_name, params, isBounds = False):
     skip_index = 6  # we skip element number, because there is no need to look for matches here
     step = 3
     folder = os.path.dirname(file_name)
+
+    imdir = os.path.join(folder, "images")
+
+    try:
+        os.makedirs(imdir)
+    except OSError as exc:  # Python ≥ 2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(imdir):
+            pass
+        # possibly handle other errno cases here, otherwise finally:
+        else:
+            raise
+
     count_iter = 0
     count_start_iter = 0 #maybe 0 i dont know
     with open(file_name) as file:
@@ -87,7 +101,7 @@ def plot_graphics_evolution_param(file_name, params, isBounds = False):
                                         "individ[" + str(theta) + "].pdf")
             plt.plot(data_for_graphics)
             fig.savefig(filename)
-            
+
         number_param += 1
 
     return count_iter
@@ -99,7 +113,18 @@ def plot_graphics_evolution_param_best(file_name, params, isBounds=False):
     skip_index = 6  # we skip element number, because there is no need to look for matches here
     step = 3
     folder = os.path.dirname(file_name)
-    error_index = 7
+    imdir = os.path.join(folder, "images")
+
+    try:
+        os.makedirs(imdir)
+    except OSError as exc:  # Python ≥ 2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(imdir):
+            pass
+        # possibly handle other errno cases here, otherwise finally:
+        else:
+            raise
+
+    error_index = params["delta_index"] - 1
 
     param_values = None
     with open(file_name) as file:
@@ -229,6 +254,7 @@ class DeepReader:
             tab.append("alpha")
             tab.append("accept")
             for target in deep_output:
+                print(target)
                 tab.append(target)
         # tab = ["element_number", "n", "l", "l1", "l2", "l3", "l4", "w", "error", "delta", "n_b", "l_b", "l1_b", "l2_b", "l3_b", "l4_b",  "n_deep", "l_deep", "l1_deep", "l2_deep", "l3_deep", "l4_deep", "n_deep_b", "l_deep_b", "l1_deep_b", "l2_deep_b", "l3_deep_b", "l4_deep_b",  "iter", "element_number", "seed", "deepoutput", "original_alpha", "alpha", "accept"]
             writer.writerow(tab)
@@ -239,10 +265,29 @@ class DeepReader:
         with open(filename, "a") as csvfile:
             writer = csv.writer(csvfile, delimiter=";")
             deep_res = self.parse_deep(d)
-            tab = [x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], int(x_b[1]), int(x_b[2]), x_b[3], x_b[4],
-                   x_b[5], x_b[6], x_deep[1], x_deep[2], x_deep[3], x_deep[4], x_deep[5], x_deep[6], int(x_deep_b[1]),
-                   int(x_deep_b[2]), x_deep_b[3], x_deep_b[4], x_deep_b[5], x_deep_b[6], float(iteration),
-                   float(element_number), float(curr_seed), o_alpha, alpha, accept]
+            #tab = [x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], int(x_b[1]), int(x_b[2]), x_b[3], x_b[4],
+            #       x_b[5], x_b[6], x_deep[1], x_deep[2], x_deep[3], x_deep[4], x_deep[5], x_deep[6], int(x_deep_b[1]),
+            #       int(x_deep_b[2]), x_deep_b[3], x_deep_b[4], x_deep_b[5], x_deep_b[6], float(iteration),
+            #       float(element_number), float(curr_seed), o_alpha, alpha, accept]
+            tab = [element_number]
+            for i in range(self.params["count_param"]):
+                tab.append(x[i + 1])
+            tab.append(x[self.params["count_param"] + 1])
+            tab.append(x[self.params["count_param"] + 2])
+            tab.append(x[self.params["count_param"] + 3])
+
+            for i in range(self.params["count_param"]):
+                tab.append(x_b[i + 1])
+
+            for i in range(self.params["count_param"]):
+                tab.append(x_deep[i + 1])
+
+            for i in range(self.params["count_param"]):
+                tab.append(x_deep_b[i + 1])
+
+            for xx in [iteration, element_number, curr_seed, o_alpha, alpha, accept]:
+                tab.append(xx)
+
             for res in deep_res:
                 tab.append(res)
             writer.writerow(tab)
@@ -256,7 +301,7 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
     chain_data = []
     best_error = 20.0
     param_values = None
-    error_index = 7
+    error_index = params["delta_index"] - 1
     start_take_param = 3  # we skip element number, because there is no need to look for matches here
     step = 3
     best_deep_output = []
@@ -289,7 +334,8 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
                     continue
                 curr_iter = d.split("iteration = ", 1)[1].split(" ")[0]
                 curr_element_number = d.split("element number = ", 1)[1].split(" ")[0]
-                curr_seed = d.split("seed = ", 1)[1].split(" ")[0]  # итерации run_a и run повторяются, надо внимательнее выбирать
+                curr_seed = d.split("seed = ", 1)[1].split("\n")[0]  # итерации run_a и run повторяются, надо внимательнее выбирать
+
                 сurr_deep_output = d
                 if float(element_number) == float(curr_element_number) and float(iteration) == float(
                         curr_iter) and curr_seed not in list_seed:
@@ -302,9 +348,12 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
                         i_data[i]):  # delete
                     i += 1
                 else:
-                    check_param = [curr_element_number, i_data[i], i_data[i + 1], i_data[i + 2], i_data[i + 3],
-                                   i_data[i + 4], i_data[i + 5]]
-                    i += 8
+                    check_param = [curr_element_number, i_data[i]]
+
+                    for ii in range(params["count_param"]):
+                        check_param.append(i_data[i + ii + 1])
+
+                    i += params["delta_index"]
                     if "original alpha = " in i_data[i]:
                         o_alpha = i_data[i].split("original alpha = ", 1)[1].rstrip()
                         alpha = i_data[i + 1].split("alpha = ", 1)[1].rstrip()
@@ -325,8 +374,12 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
                     break
 
             if find == False:
+                x_param = []
+                for i in range(0, len(x)):
+                    x_param.append("null")
+                print(x_param)
                 deep_reader.create_table(folder,
-                                         ["null", "null", "null", "null", "null", "null", "null"],
+                                         x_param,
                                          set_param(x, params),
                                          iteration,
                                          element_number,
@@ -425,25 +478,25 @@ def plot_error(folder, params, cdo, d_data, _slice=0, mode=0):
 
 if __name__ == "__main__":
   #  folder_paths = ["data/09_03/v3/with_snp", "data/09_03/v4/with_snp", "data/09_03/v4/without_snp"]
-    folder_paths = ["data/09_03/v4/with_snp"]
+    folder_paths = [sys.argv[1]]
+#    folder_paths = ["data/09_03/v4/with_snp"]
     #1600 - 1333 and 333
     log_result_name = "log_result.txt"
     log_iter_name = "log_iteration.txt"
     log_deeps_name = "log_deeps"
-    params = {"num_log_param": 9,
-              "count_theta": 12,
-              "lbound": [1, 10, 0.005, 0.005, 0.005, 0.005],
-              "hbound": [7, 20, 10, 1, 1, 10],
+    params = {"num_log_param": 7,  #length of lbound + 1
+              "count_theta": 8,
+              "lbound": [1, 10, 0.005, 0.005],
+              "hbound": [7, 20, 1, 1],
               "size_training": 1333,
               "size_valid": 333,
-              "count_param": 6,
-              "delta_index": 8,
+              "count_param": 4, #length of lbound
+              "delta_index": 6, #length of lbound + 2
               "count_iter": None}
     for folder in folder_paths:
         log_result = os.path.abspath(os.path.join(folder, log_result_name))
         log_deeps = os.path.abspath(os.path.join(folder, log_deeps_name))
         log_iter = os.path.abspath(os.path.join(folder, log_iter_name))
-
      #  plot_graphics_evolution_param(log_result, params)
         count_iter = plot_graphics_evolution_param(log_result, params, isBounds=True)
         params["count_iter"] = count_iter
