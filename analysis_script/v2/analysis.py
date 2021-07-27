@@ -177,6 +177,7 @@ def read_logs(l_r_file, l_d_file, l_i_file):
     start_take_param = 3  # because we need element number from log result
     step = 3
     res_data = []
+    count_iter = 0
     with open(l_r_file) as f:
         for line in f:
             line_list = line.split()
@@ -184,11 +185,14 @@ def read_logs(l_r_file, l_d_file, l_i_file):
                 num_list = [num for num in line_list[start_take_param:len(line_list):step]]
             else:
                 num_list = "iteration = " + line_list[2]
+                count_iter = int(line_list[2])
             res_data.append(num_list)
+    count_iter += 2
     d_data = []
     with open(l_d_file) as f:
         for line in f:
-            d_data.append(line)
+            if (line.startswith('file')):
+                d_data.append(line)
     i = 0
     while i < len(d_data):
         if "/home/" in d_data[i]:
@@ -199,7 +203,7 @@ def read_logs(l_r_file, l_d_file, l_i_file):
     with open(l_i_file) as f:
         for line in f:
             i_data.append(line)
-    return (res_data, d_data, i_data)
+    return (res_data, d_data, i_data, count_iter)
 
 @dataclass
 class DeepReader:
@@ -232,7 +236,7 @@ class DeepReader:
     def create_header(self, folder, deep_header):
         filename = folder + "/" + "table.txt"
         deep_output = self.parse_deep_header(deep_header)
-        with open(filename, "a") as csvfile:
+        with open(filename, "w") as csvfile:
             writer = csv.writer(csvfile, delimiter=";")
             tab = ["element_number"]
             for i in range(self.params["count_param"]):
@@ -254,7 +258,7 @@ class DeepReader:
             tab.append("alpha")
             tab.append("accept")
             for target in deep_output:
-                print(target)
+                # print(target)
                 tab.append(target)
         # tab = ["element_number", "n", "l", "l1", "l2", "l3", "l4", "w", "error", "delta", "n_b", "l_b", "l1_b", "l2_b", "l3_b", "l4_b",  "n_deep", "l_deep", "l1_deep", "l2_deep", "l3_deep", "l4_deep", "n_deep_b", "l_deep_b", "l1_deep_b", "l2_deep_b", "l3_deep_b", "l4_deep_b",  "iter", "element_number", "seed", "deepoutput", "original_alpha", "alpha", "accept"]
             writer.writerow(tab)
@@ -417,10 +421,11 @@ def plot_error(folder, params, cdo, d_data, _slice=0, mode=0):
 
         if "target[7]" not in d or "target[21]" not in d:
             continue
-        training_value = math.sqrt(float(d.split("target[7]:", 1)[1].split()[0]) / params["size_training"])
-        valid_value = math.sqrt(float(d.split("target[21]:", 1)[1].split()[0]) / params["size_valid"])
-        error_training.append(training_value)
-        error_valid.append(valid_value)
+        training_value = math.sqrt(float(d.split("target[7]:", 1)[1].split()[0]) / (2.0 * params["size_training"]))
+        valid_value = math.sqrt(float(d.split("target[21]:", 1)[1].split()[0]) / (2.0 * params["size_valid"]))
+        if (training_value < 100 and valid_value < 100):
+            error_training.append(training_value)
+            error_valid.append(valid_value)
 
     print(len(error_valid))
     print(len(error_training))
@@ -440,13 +445,15 @@ def plot_error(folder, params, cdo, d_data, _slice=0, mode=0):
 
     plt.axvline(np.mean(error_training), color='k', linestyle='dashed', linewidth=1)
 
+    coord_train = np.median(error_training)
     min_ylim, max_ylim = plt.ylim()
-    plt.text(np.mean(error_training) * 1.1, max_ylim * 0.9, 'Mean: {:.2f}'.format(np.mean(error_training)))
+    plt.text(coord_train * 1.1, max_ylim * 0.9, 'Median: {:.2f}'.format(coord_train))
 
-    plt.axvline(np.mean(error_valid), color='g', linestyle='dashed', linewidth=1)
+    coord_valid = np.median(error_valid)
+    plt.axvline(coord_valid, color='g', linestyle='dashed', linewidth=1)
 
     min_xlim, max_xlim = plt.xlim()
-    plt.text(np.mean(error_valid) * 1.1, max_ylim * 0.8, 'Mean: {:.2f}'.format(np.mean(error_valid)))
+    plt.text(coord_valid * 1.1, max_ylim * 0.8, 'Median: {:.2f}'.format(coord_valid))
 
     mwu_s, mwu_p = mannwhitneyu(error_training, error_valid)
     if (mwu_p > 0.05):
@@ -475,47 +482,72 @@ def plot_error(folder, params, cdo, d_data, _slice=0, mode=0):
    # plt.show()
     f.savefig(filename)
 
+def get_params_abcdeini(ini_fm):
+    params = {}
+    with open(ini_fm, "r") as fm:
+        for line in fm:
+            if (line.startswith("[default_settings]")):
+                break
+            if (line.startswith('count_iter')):
+                params['count_theta'] = int(line.split('=')[1])
+            if (line.startswith('lbound')):
+                params['lbound'] = [float() for _ in line.split('=')[1].split(';')]
+            if (line.startswith('hbound')):
+                params['hbound'] = [float() for _ in line.split('=')[1].split(';')]
+
+    params['count_iter'] = None
+    params['num_log_param'] = len(params['hbound']) + 3
+    params['count_param'] = len(params['hbound'])
+    params['delta_index'] = len(params['hbound']) + 2
+    params["size_training"] = 1200
+    params["size_valid"] = 300
+    return(params)
 
 if __name__ == "__main__":
   #  folder_paths = ["data/09_03/v3/with_snp", "data/09_03/v4/with_snp", "data/09_03/v4/without_snp"]
-    folder_paths = [sys.argv[1]]
+    ini_pp = sys.argv[1]
+    folder = os.path.dirname(ini_pp)
 #    folder_paths = ["data/09_03/v4/with_snp"]
     #1600 - 1333 and 333
     log_result_name = "log_result.txt"
     log_iter_name = "log_iteration.txt"
     log_deeps_name = "log_deeps"
-    params = {"num_log_param": 7,  #length of lbound + 1
-              "count_theta": 8,
-              "lbound": [1, 10, 0.005, 0.005],
-              "hbound": [7, 20, 1, 1],
-              "size_training": 1333,
-              "size_valid": 333,
-              "count_param": 4, #length of lbound
-              "delta_index": 6, #length of lbound + 2
-              "count_iter": None}
-    for folder in folder_paths:
-        log_result = os.path.abspath(os.path.join(folder, log_result_name))
-        log_deeps = os.path.abspath(os.path.join(folder, log_deeps_name))
-        log_iter = os.path.abspath(os.path.join(folder, log_iter_name))
+    # params = {"num_log_param": 7,  #length of lbound + 1
+              # "count_theta": 8,
+              # "lbound": [1, 10, 0.005, 0.005],
+              # "hbound": [7, 20, 1, 1],
+              # "size_training": 1216,
+              # "size_valid": 284,
+              # "count_param": 4, #length of lbound
+              # "delta_index": 6, #length of lbound + 2
+              # "count_iter": None}
+    params = get_params_abcdeini(os.path.abspath(os.path.join(folder_paths[0], ini_pp)))
+    print(params)
+
+    log_result = os.path.abspath(os.path.join(folder, log_result_name))
+    log_deeps = os.path.abspath(os.path.join(folder, log_deeps_name))
+    log_iter = os.path.abspath(os.path.join(folder, log_iter_name))
      #  plot_graphics_evolution_param(log_result, params)
-        count_iter = plot_graphics_evolution_param(log_result, params, isBounds=True)
-        params["count_iter"] = count_iter
+
+    result_data, deep_data, iter_data, count_iter = read_logs(log_result, log_deeps, log_iter)
+    params["count_iter"] = count_iter
+
+    count_iter = plot_graphics_evolution_param(log_result, params, isBounds=True)
 
       #  plot_graphics_evolution_param_best(log_result, params)
      #   plot_graphics_evolution_param_best(log_result, params, isBounds=True)
 
-        result_data, deep_data, iter_data = read_logs(log_result, log_deeps, log_iter)
-        accept_deep_output, best_deep_output = plot_table(folder,
+    accept_deep_output, best_deep_output = plot_table(folder,
                                                           params,
                                                           log_result,
                                                           result_data,
                                                           deep_data,
                                                           iter_data)
-        print("all")
-        plot_error(folder, params, deep_data, deep_data, 0)
-        print("accept")
+    print("all")
+    plot_error(folder, params, deep_data, deep_data, 0)
+    print("accept")
 
-        plot_error(folder, params, accept_deep_output, deep_data, 1)
-        for i in range(0, params["count_iter"], 10):
-            print("best = ", i)
-            plot_error(folder, params, best_deep_output, deep_data, i, 1)
+    plot_error(folder, params, accept_deep_output, deep_data, 1)
+    for i in range(0, params["count_iter"], 10):
+        print("best = ", i)
+        plot_error(folder, params, best_deep_output, deep_data, i, 1)
