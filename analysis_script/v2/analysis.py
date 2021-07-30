@@ -45,7 +45,6 @@ def _bounds(data, number_params, params, notUse=False):  # for just convert type
 def _is_string_without_definition_iter(list):
     return bool(len(list) > 3)
 
-
 def plot_graphics_evolution_param(file_name, params, isBounds = False):
     res_data = []
     skip_index = 6  # we skip element number, because there is no need to look for matches here
@@ -302,13 +301,12 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
     find = False
     k = 0
     accept_deep_output = []
-    chain_data = []
-    best_error = 20.0
+#    chain_data = []
+#    best_error = 20.0
     param_values = None
     error_index = params["delta_index"] - 1
     start_take_param = 3  # we skip element number, because there is no need to look for matches here
     step = 3
-    best_deep_output = []
     with open(l_r_file) as f:
         for line in f:
             line_list = line.split()
@@ -320,11 +318,11 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
                     if param_values not in chain_data:
                         chain_data.append(param_values)
                 continue
-            new_error = float(num_list[error_index])
-            best_error = float(best_error)
-            if new_error <= best_error:
-                param_values = num_list
-                best_error = new_error
+#            new_error = float(num_list[error_index])
+ #           best_error = float(best_error)
+  #          if new_error <= best_error:
+   #             param_values = num_list
+    #            best_error = new_error
 
     list_seed = [-1 for _ in range(0, params["count_iter"] * params["count_theta"])]
 
@@ -370,10 +368,6 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
                         accept = "accept"
                     if accept == "accept" or accept == "accept alpha":
                         accept_deep_output.append(сurr_deep_output)
-                    for c in chain_data:
-                        if c == x:
-                            best_deep_output.append(сurr_deep_output)
-                            break
                     k = i
                     break
 
@@ -398,7 +392,7 @@ def plot_table(folder, params, l_r_file, x_data, d_data, i_data):
                                          curr_seed, сurr_deep_output.rstrip(),
                                          o_alpha, alpha, accept)
                 find = False
-    return accept_deep_output, best_deep_output
+    return accept_deep_output
 
 
 def plot_error(folder, params, cdo, d_data, _slice=0, mode=0):
@@ -421,8 +415,8 @@ def plot_error(folder, params, cdo, d_data, _slice=0, mode=0):
 
         if "target[7]" not in d or "target[21]" not in d:
             continue
-        training_value = math.sqrt(float(d.split("target[7]:", 1)[1].split()[0]) / (2.0 * params["size_training"]))
-        valid_value = math.sqrt(float(d.split("target[21]:", 1)[1].split()[0]) / (2.0 * params["size_valid"]))
+        training_value = math.sqrt(float(d.split("target[7]:", 1)[1].split()[0]) / (1.0 * params["size_training"]))
+        valid_value = math.sqrt(float(d.split("target[21]:", 1)[1].split()[0]) / (1.0 * params["size_valid"]))
         if (training_value < 100 and valid_value < 100):
             error_training.append(training_value)
             error_valid.append(valid_value)
@@ -491,9 +485,9 @@ def get_params_abcdeini(ini_fm):
             if (line.startswith('count_iter')):
                 params['count_theta'] = int(line.split('=')[1])
             if (line.startswith('lbound')):
-                params['lbound'] = [float() for _ in line.split('=')[1].split(';')]
+                params['lbound'] = np.array(line.split('=')[1].split('\n')[0].split(';'), dtype=np.float64)
             if (line.startswith('hbound')):
-                params['hbound'] = [float() for _ in line.split('=')[1].split(';')]
+                params['hbound'] = np.array(line.split('=')[1].split('\n')[0].split(';'), dtype=np.float64)
 
     params['count_iter'] = None
     params['num_log_param'] = len(params['hbound']) + 3
@@ -521,8 +515,10 @@ if __name__ == "__main__":
               # "count_param": 4, #length of lbound
               # "delta_index": 6, #length of lbound + 2
               # "count_iter": None}
-    params = get_params_abcdeini(os.path.abspath(os.path.join(folder_paths[0], ini_pp)))
+    params = get_params_abcdeini(ini_pp)
     print(params)
+
+    # print(params['hbound'][0], params['hbound'][1])
 
     log_result = os.path.abspath(os.path.join(folder, log_result_name))
     log_deeps = os.path.abspath(os.path.join(folder, log_deeps_name))
@@ -532,22 +528,18 @@ if __name__ == "__main__":
     result_data, deep_data, iter_data, count_iter = read_logs(log_result, log_deeps, log_iter)
     params["count_iter"] = count_iter
 
-    count_iter = plot_graphics_evolution_param(log_result, params, isBounds=True)
+    # count_iter = plot_graphics_evolution_param(log_result, params, isBounds=True)
 
       #  plot_graphics_evolution_param_best(log_result, params)
      #   plot_graphics_evolution_param_best(log_result, params, isBounds=True)
 
-    accept_deep_output, best_deep_output = plot_table(folder,
-                                                          params,
-                                                          log_result,
-                                                          result_data,
-                                                          deep_data,
-                                                          iter_data)
-    print("all")
-    plot_error(folder, params, deep_data, deep_data, 0)
-    print("accept")
+    accept_deep_output = plot_table(folder, params, log_result, result_data, deep_data, iter_data)
 
-    plot_error(folder, params, accept_deep_output, deep_data, 1)
-    for i in range(0, params["count_iter"], 10):
-        print("best = ", i)
-        plot_error(folder, params, best_deep_output, deep_data, i, 1)
+    # print("all")
+    # plot_error(folder, params, deep_data, deep_data, 0)
+    # print("accept")
+
+    # plot_error(folder, params, accept_deep_output, deep_data, 1)
+    # for i in range(0, params["count_iter"], 10):
+        # print("best = ", i)
+        # plot_error(folder, params, best_deep_output, deep_data, i, 1)
