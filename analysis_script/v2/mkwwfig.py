@@ -37,7 +37,6 @@ def plot_cw_fig(figfile, datarrs, markers, case):
 	ax = plt.axes()
 	ax.yaxis.grid(True, zorder = 1)
 # Creating plot
-#	bp = ax.boxplot(datarrs)
 	plt.xlabel('Temperature increment')
 	plt.ylabel('Difference between prediction and data')
 	xs = range(1, len(markers) + 1)
